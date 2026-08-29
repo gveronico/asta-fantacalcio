@@ -1,0 +1,16 @@
+{
+  "name": "Asta Fantacalcio",
+  "short_name": "Asta",
+  "description": "Strumento per l'asta del fantacalcio: liste per fasce, segnalini e rosa da 300 crediti.",
+  "start_url": "./asta.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1419",
+  "theme_color": "#0f1419",
+  "lang": "it",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

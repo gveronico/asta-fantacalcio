@@ -1,0 +1,9 @@
+# Il file delle quotazioni resta solo in locale: serve per generare le liste
+*.xlsx
+*.xls
+
+# File temporanei di verifica
+_tmp_*.html
+check-*.png
+v-*.png
+__pycache__/

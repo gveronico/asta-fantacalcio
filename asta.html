@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Asta" />
+  <meta name="theme-color" content="#0f1419" />
+  <!-- Manifest e icone servono solo se il file sta online: aperto da locale vengono ignorati -->
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icon-180.png" />
+  <title>Asta Fantacalcio</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --bg2: #1a222c;
+      --bg3: #243040;
+      --card: #1c2530;
+      --text: #f2f5f8;
+      --muted: #9aa8b8;
+      --border: #2e3c4d;
+      --accent: #5b9fd4;
+      --mine: #2ecc71;
+      --taken: #e74c3c;
+      --like: #f1c40f;
+      --risk: #e67e22;
+      --bonus: #8e6cc9;
+      --p: #4fc3f7;
+      --d: #66bb6a;
+      --c: #ffa726;
+      --a: #ef5350;
+      --danger: #ff6b6b;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --header-h: 118px;
+      --tools-h: 78px;
+      --radius: 14px;
+      --touch: 52px;
+      --card-min: 152px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      height: 100%;
+      overflow: hidden;
+      overflow-x: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+    }
+
+    header {
+      flex: 0 0 auto;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px 8px;
+      z-index: 20;
+    }
+
+    .top-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .credits-chip {
+      flex: 0 0 auto;
+      min-width: 92px;
+      height: 44px;
+      border-radius: 22px;
+      border: 2px solid var(--accent);
+      background: var(--bg3);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 16px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+    .credits-chip.over { border-color: var(--danger); color: var(--danger); }
+    .credits-chip .label { font-size: 11px; font-weight: 600; color: var(--muted); }
+
+    .search-wrap { flex: 1; position: relative; }
+    .search-wrap input {
+      width: 100%;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      padding: 0 40px 0 14px;
+      outline: none;
+    }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-clear {
+      position: absolute; right: 6px; top: 6px;
+      width: 32px; height: 32px;
+      border: none; border-radius: 8px;
+      background: transparent; color: var(--muted);
+      font-size: 18px; cursor: pointer;
+    }
+
+    .role-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .role-tab {
+      min-width: 0;
+      overflow: hidden;
+      height: 42px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .role-tab.active[data-role="P"] { background: rgba(79,195,247,.18); color: var(--p); border-color: var(--p); }
+    .role-tab.active[data-role="D"] { background: rgba(102,187,106,.18); color: var(--d); border-color: var(--d); }
+    .role-tab.active[data-role="C"] { background: rgba(255,167,38,.18); color: var(--c); border-color: var(--c); }
+    .role-tab.active[data-role="A"] { background: rgba(239,83,80,.18); color: var(--a); border-color: var(--a); }
+
+    main {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 12px calc(var(--tools-h) + var(--safe-bottom) + 16px);
+    }
+
+    .tier {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .tier.bonus { border-color: var(--bonus); }
+    .tier-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .tier.bonus .tier-head { color: var(--bonus); }
+    .tier-count { font-weight: 600; font-size: 12px; opacity: .8; }
+
+    /* Griglia di card: quante ne stanno per riga lo decide la larghezza dello schermo */
+    .tier-body {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+      gap: 8px;
+      padding: 10px;
+      align-items: stretch;
+    }
+
+    .player {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+      min-height: 76px;
+      padding: 10px 11px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform .1s ease, background .12s, border-color .12s, box-shadow .12s;
+    }
+    .player:active { transform: scale(.97); }
+    .player.mine {
+      background: rgba(46,204,113,.14);
+      border-color: rgba(46,204,113,.6);
+    }
+    .player.taken {
+      background: rgba(231,76,60,.12);
+      border-color: rgba(231,76,60,.5);
+    }
+    .player.liked {
+      border-color: var(--like);
+      box-shadow: 0 0 0 1px var(--like), 0 0 12px rgba(241,196,15,.22);
+    }
+    .player.hidden-row { opacity: .45; }
+
+    .player-name {
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1.2;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player.mine .player-name { color: var(--mine); }
+    .player.taken .player-name { color: var(--taken); }
+
+    .player-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-width: 0;
+      min-height: 24px;
+    }
+    .player-team {
+      font-size: 12px;
+      color: var(--muted);
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .badges { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
+    .badge {
+      min-width: 24px; height: 24px;
+      border-radius: 7px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+    }
+    .badge.risk { background: rgba(230,126,34,.25); color: var(--risk); border: 1px solid var(--risk); }
+    .badge.like { background: rgba(241,196,15,.2); color: var(--like); border: 1px solid var(--like); }
+    .badge.mine { background: rgba(46,204,113,.2); color: var(--mine); border: 1px solid var(--mine); font-size: 11px; padding: 0 6px; min-width: auto; }
+    .badge.taken { background: rgba(231,76,60,.2); color: var(--taken); border: 1px solid var(--taken); font-size: 11px; padding: 0 6px; min-width: auto; }
+
+    /* Schermi molto stretti: card più basse per non perdere righe */
+    @media (max-width: 380px) {
+      :root { --card-min: 128px; }
+      .player-name { font-size: 16px; }
+      .tool { font-size: 10px; }
+    }
+    /* iPad in verticale e oltre: card più larghe e nomi più grandi */
+    @media (min-width: 700px) {
+      :root { --card-min: 172px; }
+      .player-name { font-size: 18px; }
+      .player-team { font-size: 13px; }
+    }
+    @media (min-width: 1100px) {
+      :root { --card-min: 190px; }
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 48px 20px;
+      font-size: 16px;
+    }
+
+    .toolbar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 8px 8px calc(8px + var(--safe-bottom));
+      background: rgba(26,34,44,.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      z-index: 30;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+    }
+    .tool {
+      min-width: 0;
+      overflow: hidden;
+      min-height: 58px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 2px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      line-height: 1.1;
+    }
+    .tool .ico { font-size: 18px; line-height: 1; }
+    .tool.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(91,159,212,.2);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+    .tool[data-tool="taken"].active { border-color: var(--taken); background: rgba(231,76,60,.2); box-shadow: 0 0 0 1px var(--taken); }
+    .tool[data-tool="mine"].active { border-color: var(--mine); background: rgba(46,204,113,.2); box-shadow: 0 0 0 1px var(--mine); }
+    .tool[data-tool="like"].active { border-color: var(--like); background: rgba(241,196,15,.18); box-shadow: 0 0 0 1px var(--like); color: #fff; }
+    .tool[data-tool="risk"].active { border-color: var(--risk); background: rgba(230,126,34,.2); box-shadow: 0 0 0 1px var(--risk); }
+
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 40;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+
+    .sheet {
+      width: 100%;
+      max-width: 720px;
+      max-height: min(88vh, 900px);
+      background: var(--bg2);
+      border-radius: 20px 20px 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: var(--safe-bottom);
+      animation: slideUp .22s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px); opacity: .6; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .sheet-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+    }
+    .sheet-head h2 { margin: 0; font-size: 18px; }
+    .sheet-actions { display: flex; gap: 8px; }
+    .btn {
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 14px;
+      padding: 0 14px;
+      cursor: pointer;
+    }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #061018; }
+    .btn.danger { background: rgba(231,76,60,.2); border-color: var(--taken); color: #ffb4ae; }
+    .btn.ghost { background: transparent; }
+
+    .sheet-body {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px 16px 24px;
+    }
+
+    .roster-summary {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .stat {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat .v { font-size: 22px; font-weight: 800; }
+    .stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+    .stat.over .v { color: var(--danger); }
+
+    .roster-role { margin-bottom: 16px; }
+    .roster-role h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+    }
+    .slot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 8px 12px;
+      background: var(--card);
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+    .slot.filled {
+      border-style: solid;
+      border-color: rgba(46,204,113,.45);
+      background: rgba(46,204,113,.08);
+    }
+    .slot-idx {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--bg3);
+      color: var(--muted);
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .slot-info { flex: 1; min-width: 0; }
+    .slot-name { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .slot-empty { color: var(--muted); font-size: 14px; }
+    .slot-team { font-size: 12px; color: var(--muted); }
+    .slot-credits {
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--mine);
+      min-width: 42px;
+      text-align: right;
+    }
+
+    .modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal.open { display: flex; }
+    .modal-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .modal-card h3 { margin: 0 0 6px; font-size: 18px; }
+    .modal-sub { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+    .credits-display {
+      text-align: center;
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin: 8px 0 14px;
+      min-height: 52px;
+    }
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .key {
+      height: 52px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text);
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .key:active { background: var(--accent); color: #061018; }
+    .modal-actions { display: flex; gap: 8px; }
+    .modal-actions .btn { flex: 1; height: 48px; font-size: 16px; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--tools-h) + var(--safe-bottom) + 18px);
+      transform: translateX(-50%) translateY(20px);
+      background: #2a3644;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s;
+      z-index: 60;
+      max-width: 90vw;
+      text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .meta-bar button {
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .meta-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 12px;
+      flex-wrap: wrap;
+    }
+    .chip-toggle {
+      height: 34px;
+      border-radius: 17px;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    .chip-toggle.on {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(91,159,212,.18);
+    }
+
+    .noscript-warn {
+      margin: 24px;
+      padding: 20px;
+      border: 2px solid var(--danger);
+      border-radius: 14px;
+      background: rgba(255,107,107,.1);
+      font-size: 17px;
+      line-height: 1.5;
+    }
+    .noscript-warn h1 { font-size: 20px; margin: 0 0 10px; }
+    .noscript-warn code { background: var(--bg3); padding: 2px 6px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <noscript>
+    <div class="noscript-warn">
+      <h1>Apri questo file con un browser</h1>
+      Questa app ha bisogno di JavaScript: il <strong>Visualizzatore HTML</strong> di iPhone/iPad non lo esegue,
+      quindi resta tutto vuoto.<br /><br />
+      Tieni premuto sul file, poi <strong>Condividi</strong> e scegli <strong>Chrome</strong> o <strong>Safari</strong>.
+    </div>
+  </noscript>
+  <div id="app">
+    <header>
+      <div class="top-row">
+        <button type="button" class="credits-chip" id="creditsChip" title="Apri rosa">
+          <span id="creditsLeft">300</span>
+          <span class="label">/300</span>
+        </button>
+        <div class="search-wrap">
+          <input id="search" type="search" placeholder="Cerca nome o squadra…" autocomplete="off" enterkeyhint="search" />
+          <button type="button" class="search-clear" id="searchClear" aria-label="Pulisci">×</button>
+        </div>
+      </div>
+      <div class="role-tabs" id="roleTabs">
+        <button type="button" class="role-tab active" data-role="P">Portieri</button>
+        <button type="button" class="role-tab" data-role="D">Difensori</button>
+        <button type="button" class="role-tab" data-role="C">Centroc.</button>
+        <button type="button" class="role-tab" data-role="A">Attaccanti</button>
+      </div>
+      <div class="meta-bar">
+        <span id="dataStampLabel"></span>
+        <span class="meta-actions">
+          <button type="button" id="fsBtn" style="display:none">Schermo intero</button>
+          <button type="button" id="resetBtn">Reset asta</button>
+        </span>
+      </div>
+    </header>
+
+    <main id="list"></main>
+
+    <nav class="toolbar" id="toolbar">
+      <button type="button" class="tool active" data-tool="taken"><span class="ico">🔴</span>Altri</button>
+      <button type="button" class="tool" data-tool="mine"><span class="ico">🟢</span>Mio</button>
+      <button type="button" class="tool" data-tool="hide"><span class="ico">👁</span>Nascondi</button>
+      <button type="button" class="tool" data-tool="like"><span class="ico">★</span>Piace</button>
+      <button type="button" class="tool" data-tool="risk"><span class="ico">R</span>Rischio</button>
+      <button type="button" class="tool" data-tool="clear"><span class="ico">↺</span>Libero</button>
+    </nav>
+  </div>
+
+  <div class="overlay" id="rosterOverlay">
+    <div class="sheet" id="rosterSheet">
+      <div class="sheet-head">
+        <h2>La mia rosa</h2>
+        <div class="sheet-actions">
+          <button type="button" class="btn ghost" id="closeRoster">Chiudi</button>
+        </div>
+      </div>
+      <div class="sheet-body" id="rosterBody"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="creditsModal">
+    <div class="modal-card">
+      <h3 id="creditsModalTitle">Crediti spesi</h3>
+      <div class="modal-sub" id="creditsModalSub"></div>
+      <div class="credits-display" id="creditsDisplay">0</div>
+      <div class="keypad" id="keypad"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="creditsCancel">Annulla</button>
+        <button type="button" class="btn danger" id="creditsRemove" style="display:none">Togli</button>
+        <button type="button" class="btn primary" id="creditsConfirm">Conferma</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+/* === PLAYERS_DATA_START === */
+const PLAYERS = {
+  "dataStamp": "Quotazioni_Fantacalcio_Stagione_2026_27.xlsx | 2026-08-29 17:20 UTC",
+  "P": [
+    {
+      "id": 5841,
+      "nome": "Svilar",
+      "squadra": "Roma"
+    },
+    {
+      "id": 5116,
+      "nome": "Martinez Jo.",
+      "squadra": "Inter"
+    },
+    {
+      "id": 4964,
+      "nome": "Vicario",
+      "squadra": "Juventus"
+    },
+    {
+      "id": 6966,
+      "nome": "Butez",
+      "squadra": "Como"
+    },
+    {
+      "id": 572,
+      "nome": "Meret",
+      "squadra": "Napoli"
+    },
+    {
+      "id": 4431,
+      "nome": "Carnesecchi",
+      "squadra": "Atalanta"
+    },
+    {
+      "id": 4312,
+      "nome": "Maignan",
+      "squadra": "Milan"
+    },
+    {
+      "id": 2521,
+      "nome": "De Gea",
+      "squadra": "Fiorentina"
+    },
+    {
+      "id": 133,
+      "nome": "Skorupski",
+      "squadra": "Bologna"
+    },
+    {
+      "id": 6482,
+      "nome": "Mandas",
+      "squadra": "Lazio"
+    },
+    {
+      "id": 2134,
+      "nome": "Falcone",
+      "squadra": "Lecce"
+    },
+    {
+      "id": 6462,
+      "nome": "Okoye",
+      "squadra": "Udinese"
+    },
+    {
+      "id": 4360,
+      "nome": "Caprile",
+      "squadra": "Cagliari"
+    },
+    {
+      "id": 7332,
+      "nome": "Bijlow",
+      "squadra": "Genoa"
+    },
+    {
+      "id": 4236,
+      "nome": "Muric",
+      "squadra": "Sassuolo"
+    },
+    {
+      "id": 7457,
+      "nome": "Mascardi",
+      "squadra": "Torino"
+    },
+    {
+      "id": 6415,
+      "nome": "Palmisani",
+      "squadra": "Frosinone"
+    },
+    {
+      "id": 6248,
+      "nome": "Stankovic F.",
+      "squadra": "Venezia"
+    },
+    {
+      "id": 4485,
+      "nome": "Thiam",
+      "squadra": "Monza"
+    },
+    {
+      "id": 6662,
+      "nome": "Corvi",
+      "squadra": "Parma"
+    }
+  ],
+  "D": {
+    "tiers": [
+      [
+        {
+          "id": 254,
+          "nome": "Dimarco",
+          "squadra": "Inter"
+        },
+        {
+          "id": 7181,
+          "nome": "Wesley",
+          "squadra": "Roma"
+        },
+        {
+          "id": 4998,
+          "nome": "Molina N.",
+          "squadra": "Roma"
+        },
+        {
+          "id": 2788,
+          "nome": "Bremer",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 4159,
+          "nome": "Akanji",
+          "squadra": "Inter"
+        },
+        {
+          "id": 4409,
+          "nome": "Rrahmani",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 2296,
+          "nome": "Mancini",
+          "squadra": "Roma"
+        },
+        {
+          "id": 5022,
+          "nome": "Pavlovic",
+          "squadra": "Milan"
+        }
+      ],
+      [
+        {
+          "id": 4976,
+          "nome": "Kalulu",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 6956,
+          "nome": "Solet",
+          "squadra": "Udinese"
+        },
+        {
+          "id": 4317,
+          "nome": "N'Dicka",
+          "squadra": "Roma"
+        },
+        {
+          "id": 2120,
+          "nome": "Bastoni",
+          "squadra": "Inter"
+        },
+        {
+          "id": 5750,
+          "nome": "Ostigard",
+          "squadra": "Genoa"
+        },
+        {
+          "id": 2816,
+          "nome": "Di Lorenzo",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 5982,
+          "nome": "Spence",
+          "squadra": "Inter"
+        },
+        {
+          "id": 6217,
+          "nome": "Bisseck",
+          "squadra": "Inter"
+        }
+      ],
+      [
+        {
+          "id": 6869,
+          "nome": "Ramon",
+          "squadra": "Como"
+        },
+        {
+          "id": 5514,
+          "nome": "Vasquez",
+          "squadra": "Genoa"
+        },
+        {
+          "id": 5833,
+          "nome": "Gila",
+          "squadra": "Milan"
+        },
+        {
+          "id": 5641,
+          "nome": "Chalobah T.",
+          "squadra": "Como"
+        },
+        {
+          "id": 2514,
+          "nome": "Stones",
+          "squadra": "Inter"
+        },
+        {
+          "id": 5526,
+          "nome": "Scalvini",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 5365,
+          "nome": "Dragusin",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 6727,
+          "nome": "Couto",
+          "squadra": "Como"
+        }
+      ],
+      [
+        {
+          "id": 4807,
+          "nome": "Hermoso",
+          "squadra": "Roma"
+        },
+        {
+          "id": 5520,
+          "nome": "Cambiaso",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 5877,
+          "nome": "Carlos Augusto",
+          "squadra": "Inter"
+        },
+        {
+          "id": 1852,
+          "nome": "Spinazzola",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 4401,
+          "nome": "Gabbia",
+          "squadra": "Milan"
+        },
+        {
+          "id": 4734,
+          "nome": "Miranda J.",
+          "squadra": "Bologna"
+        },
+        {
+          "id": 5862,
+          "nome": "Valeri",
+          "squadra": "Parma"
+        },
+        {
+          "id": 6531,
+          "nome": "Jimenez A.",
+          "squadra": "Fiorentina"
+        }
+      ],
+      [
+        {
+          "id": 6496,
+          "nome": "Bartesaghi",
+          "squadra": "Milan"
+        },
+        {
+          "id": 460,
+          "nome": "Romagnoli",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 4664,
+          "nome": "Badiashile",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 6664,
+          "nome": "Delprato",
+          "squadra": "Parma"
+        },
+        {
+          "id": 6814,
+          "nome": "Norton-Cuffy",
+          "squadra": "Genoa"
+        },
+        {
+          "id": 6867,
+          "nome": "Valle",
+          "squadra": "Como"
+        },
+        {
+          "id": 5885,
+          "nome": "Dodò",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 6485,
+          "nome": "Kristensen T.",
+          "squadra": "Atalanta"
+        }
+      ],
+      [
+        {
+          "id": 2188,
+          "nome": "Marusic",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 4210,
+          "nome": "Mina",
+          "squadra": "Cagliari"
+        },
+        {
+          "id": 6989,
+          "nome": "Tiago Gabriel",
+          "squadra": "Lecce"
+        },
+        {
+          "id": 6672,
+          "nome": "Idzes",
+          "squadra": "Sassuolo"
+        },
+        {
+          "id": 7580,
+          "nome": "Sutalo J.",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 4994,
+          "nome": "Vojvoda",
+          "squadra": "Udinese"
+        },
+        {
+          "id": 554,
+          "nome": "Zappacosta",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 4433,
+          "nome": "Zortea",
+          "squadra": "Bologna"
+        }
+      ],
+      [
+        {
+          "id": 7219,
+          "nome": "Bernasconi",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 6042,
+          "nome": "Lucumì",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 7294,
+          "nome": "Valdepenas",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 4887,
+          "nome": "Bellanova",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 7529,
+          "nome": "Koulierakis",
+          "squadra": "Roma"
+        },
+        {
+          "id": 7410,
+          "nome": "Viery",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 6320,
+          "nome": "Doekhi",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 7414,
+          "nome": "Kaiki",
+          "squadra": "Como"
+        }
+      ],
+      [
+        {
+          "id": 2724,
+          "nome": "Buongiorno",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 4657,
+          "nome": "Celik",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 7212,
+          "nome": "Heggem",
+          "squadra": "Bologna"
+        },
+        {
+          "id": 7485,
+          "nome": "Mangas",
+          "squadra": "Monza"
+        },
+        {
+          "id": 5701,
+          "nome": "Obert",
+          "squadra": "Cagliari"
+        },
+        {
+          "id": 7329,
+          "nome": "Obrador",
+          "squadra": "Sassuolo"
+        },
+        {
+          "id": 4817,
+          "nome": "Pedraza",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 6916,
+          "nome": "Ahanor",
+          "squadra": "Atalanta"
+        }
+      ],
+      [
+        {
+          "id": 6642,
+          "nome": "Coco",
+          "squadra": "Torino"
+        },
+        {
+          "id": 7238,
+          "nome": "Kouadio",
+          "squadra": "Monza"
+        },
+        {
+          "id": 6660,
+          "nome": "Marcandalli",
+          "squadra": "Genoa"
+        },
+        {
+          "id": 4177,
+          "nome": "Pavard",
+          "squadra": "Inter"
+        },
+        {
+          "id": 7012,
+          "nome": "Provstgaard",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 6986,
+          "nome": "Rensch",
+          "squadra": "Roma"
+        },
+        {
+          "id": 7268,
+          "nome": "Rodriguez Ju.",
+          "squadra": "Cagliari"
+        },
+        {
+          "id": 7235,
+          "nome": "Troilo",
+          "squadra": "Parma"
+        }
+      ]
+    ],
+    "bonus": [
+      {
+        "id": 7253,
+        "nome": "Bella-Kotchap",
+        "squadra": "Venezia"
+      },
+      {
+        "id": 6495,
+        "nome": "Comuzzo",
+        "squadra": "Torino"
+      },
+      {
+        "id": 5273,
+        "nome": "Estupinan",
+        "squadra": "Milan"
+      },
+      {
+        "id": 4502,
+        "nome": "Gallo",
+        "squadra": "Lecce"
+      },
+      {
+        "id": 5678,
+        "nome": "Holm",
+        "squadra": "Bologna"
+      },
+      {
+        "id": 5010,
+        "nome": "Ismajli",
+        "squadra": "Torino"
+      },
+      {
+        "id": 6893,
+        "nome": "Kempf",
+        "squadra": "Como"
+      },
+      {
+        "id": 4952,
+        "nome": "Monterisi",
+        "squadra": "Frosinone"
+      },
+      {
+        "id": 5840,
+        "nome": "Olivera",
+        "squadra": "Napoli"
+      },
+      {
+        "id": 7274,
+        "nome": "Zè Pedro",
+        "squadra": "Cagliari"
+      }
+    ]
+  },
+  "C": {
+    "tiers": [
+      [
+        {
+          "id": 6875,
+          "nome": "Paz N.",
+          "squadra": "Como"
+        },
+        {
+          "id": 2194,
+          "nome": "Calhanoglu",
+          "squadra": "Inter"
+        },
+        {
+          "id": 4777,
+          "nome": "McTominay",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 2167,
+          "nome": "Orsolini",
+          "squadra": "Bologna"
+        },
+        {
+          "id": 2423,
+          "nome": "Pulisic",
+          "squadra": "Milan"
+        },
+        {
+          "id": 2379,
+          "nome": "Rabiot",
+          "squadra": "Milan"
+        },
+        {
+          "id": 2517,
+          "nome": "De Bruyne",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 7126,
+          "nome": "Baturina",
+          "squadra": "Como"
+        }
+      ],
+      [
+        {
+          "id": 7556,
+          "nome": "Mora",
+          "squadra": "Roma"
+        },
+        {
+          "id": 632,
+          "nome": "Zaccagni",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 5559,
+          "nome": "Da Cunha",
+          "squadra": "Como"
+        },
+        {
+          "id": 6908,
+          "nome": "Atta",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 2766,
+          "nome": "Zaniolo",
+          "squadra": "Udinese"
+        },
+        {
+          "id": 1870,
+          "nome": "Barella",
+          "squadra": "Inter"
+        },
+        {
+          "id": 5687,
+          "nome": "Vlasic",
+          "squadra": "Torino"
+        },
+        {
+          "id": 4973,
+          "nome": "McKennie",
+          "squadra": "Juventus"
+        }
+      ],
+      [
+        {
+          "id": 2848,
+          "nome": "Frattesi",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 6884,
+          "nome": "Conceicao",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 7314,
+          "nome": "Taylor K.",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 7078,
+          "nome": "Mastantuono",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 7436,
+          "nome": "Alajbegovic",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 6372,
+          "nome": "Moreira",
+          "squadra": "Milan"
+        },
+        {
+          "id": 5792,
+          "nome": "Ederson D.S.",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 5172,
+          "nome": "Jones C.",
+          "squadra": "Inter"
+        }
+      ],
+      [
+        {
+          "id": 4220,
+          "nome": "Zambo Anguissa",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 2606,
+          "nome": "Modric",
+          "squadra": "Milan"
+        },
+        {
+          "id": 6684,
+          "nome": "Ekkelenkamp",
+          "squadra": "Udinese"
+        },
+        {
+          "id": 152,
+          "nome": "Zielinski",
+          "squadra": "Inter"
+        },
+        {
+          "id": 6274,
+          "nome": "Diouf",
+          "squadra": "Inter"
+        },
+        {
+          "id": 6844,
+          "nome": "Rowe",
+          "squadra": "Bologna"
+        },
+        {
+          "id": 5589,
+          "nome": "Konè M.",
+          "squadra": "Roma"
+        },
+        {
+          "id": 5119,
+          "nome": "Samardzic",
+          "squadra": "Atalanta"
+        }
+      ],
+      [
+        {
+          "id": 5800,
+          "nome": "Gudmundsson A.",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 536,
+          "nome": "Politano",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 5844,
+          "nome": "Thorstvedt",
+          "squadra": "Sassuolo"
+        },
+        {
+          "id": 7223,
+          "nome": "Vergara",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 6151,
+          "nome": "Perrone",
+          "squadra": "Como"
+        },
+        {
+          "id": 6666,
+          "nome": "Bernabè",
+          "squadra": "Parma"
+        },
+        {
+          "id": 4892,
+          "nome": "Saelemaekers",
+          "squadra": "Milan"
+        },
+        {
+          "id": 5562,
+          "nome": "Thuram K.",
+          "squadra": "Juventus"
+        }
+      ],
+      [
+        {
+          "id": 827,
+          "nome": "Locatelli",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 5888,
+          "nome": "Casadei",
+          "squadra": "Torino"
+        },
+        {
+          "id": 7129,
+          "nome": "Rodriguez Je.",
+          "squadra": "Como"
+        },
+        {
+          "id": 5823,
+          "nome": "Baldanzi",
+          "squadra": "Genoa"
+        },
+        {
+          "id": 184,
+          "nome": "Bernardeschi",
+          "squadra": "Bologna"
+        },
+        {
+          "id": 4364,
+          "nome": "Gaetano",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 779,
+          "nome": "Cristante",
+          "squadra": "Roma"
+        },
+        {
+          "id": 5500,
+          "nome": "Cancellieri",
+          "squadra": "Lazio"
+        }
+      ],
+      [
+        {
+          "id": 4479,
+          "nome": "Elmas",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 7551,
+          "nome": "Schmid",
+          "squadra": "Frosinone"
+        },
+        {
+          "id": 7472,
+          "nome": "Calò",
+          "squadra": "Frosinone"
+        },
+        {
+          "id": 6618,
+          "nome": "Cissè A.",
+          "squadra": "Milan"
+        },
+        {
+          "id": 6294,
+          "nome": "Ndour",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 530,
+          "nome": "Pellegrini Lo.",
+          "squadra": "Roma"
+        },
+        {
+          "id": 6010,
+          "nome": "Fazzini",
+          "squadra": "Cagliari"
+        },
+        {
+          "id": 2077,
+          "nome": "Pasalic",
+          "squadra": "Atalanta"
+        }
+      ],
+      [
+        {
+          "id": 5858,
+          "nome": "Ferguson",
+          "squadra": "Bologna"
+        },
+        {
+          "id": 1933,
+          "nome": "Mandragora",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 5735,
+          "nome": "Volpato",
+          "squadra": "Sassuolo"
+        },
+        {
+          "id": 4856,
+          "nome": "Chukwueze",
+          "squadra": "Milan"
+        },
+        {
+          "id": 4465,
+          "nome": "Fagioli",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 6398,
+          "nome": "Isaksen",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 4287,
+          "nome": "Lobotka",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 4436,
+          "nome": "Cambiaghi",
+          "squadra": "Bologna"
+        }
+      ],
+      [
+        {
+          "id": 6678,
+          "nome": "Liberali",
+          "squadra": "Como"
+        },
+        {
+          "id": 7070,
+          "nome": "Sucic P.",
+          "squadra": "Inter"
+        },
+        {
+          "id": 7060,
+          "nome": "Cacciamani",
+          "squadra": "Torino"
+        },
+        {
+          "id": 5791,
+          "nome": "Frendrup",
+          "squadra": "Genoa"
+        },
+        {
+          "id": 6680,
+          "nome": "Karlstrom",
+          "squadra": "Udinese"
+        },
+        {
+          "id": 6717,
+          "nome": "Konè I.",
+          "squadra": "Sassuolo"
+        },
+        {
+          "id": 7412,
+          "nome": "Milla",
+          "squadra": "Como"
+        },
+        {
+          "id": 7464,
+          "nome": "Oulai",
+          "squadra": "Fiorentina"
+        }
+      ]
+    ],
+    "bonus": [
+      {
+        "id": 7311,
+        "nome": "Romano",
+        "squadra": "Cagliari"
+      },
+      {
+        "id": 5422,
+        "nome": "Zalewski",
+        "squadra": "Atalanta"
+      },
+      {
+        "id": 5761,
+        "nome": "Zhegrova",
+        "squadra": "Juventus"
+      },
+      {
+        "id": 5674,
+        "nome": "Basic",
+        "squadra": "Venezia"
+      },
+      {
+        "id": 6549,
+        "nome": "Pierotti",
+        "squadra": "Lecce"
+      },
+      {
+        "id": 6271,
+        "nome": "El Aynaoui",
+        "squadra": "Roma"
+      },
+      {
+        "id": 6020,
+        "nome": "Ellertsson",
+        "squadra": "Genoa"
+      },
+      {
+        "id": 7535,
+        "nome": "Fitz-Jim",
+        "squadra": "Torino"
+      },
+      {
+        "id": 4199,
+        "nome": "Loftus-Cheek",
+        "squadra": "Milan"
+      },
+      {
+        "id": 5036,
+        "nome": "Caqueret",
+        "squadra": "Como"
+      }
+    ]
+  },
+  "A": {
+    "tiers": [
+      [
+        {
+          "id": 5585,
+          "nome": "Malen",
+          "squadra": "Roma"
+        },
+        {
+          "id": 2764,
+          "nome": "Martinez L.",
+          "squadra": "Inter"
+        },
+        {
+          "id": 4871,
+          "nome": "Thuram",
+          "squadra": "Inter"
+        },
+        {
+          "id": 6052,
+          "nome": "Hojlund",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 6397,
+          "nome": "Ramos G.",
+          "squadra": "Milan"
+        },
+        {
+          "id": 5951,
+          "nome": "Kolo Muani",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 2097,
+          "nome": "Kean",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 7017,
+          "nome": "Douvikas",
+          "squadra": "Como"
+        }
+      ],
+      [
+        {
+          "id": 6434,
+          "nome": "Yildiz",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 2137,
+          "nome": "Scamacca",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 5637,
+          "nome": "Davis K.",
+          "squadra": "Udinese"
+        },
+        {
+          "id": 7071,
+          "nome": "Esposito F.P.",
+          "squadra": "Inter"
+        },
+        {
+          "id": 531,
+          "nome": "Berardi",
+          "squadra": "Sassuolo"
+        },
+        {
+          "id": 6435,
+          "nome": "Krstovic",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 5995,
+          "nome": "De Ketelaere",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 309,
+          "nome": "Dybala",
+          "squadra": "Roma"
+        }
+      ],
+      [
+        {
+          "id": 6060,
+          "nome": "Laurientè",
+          "squadra": "Sassuolo"
+        },
+        {
+          "id": 2061,
+          "nome": "Simeone",
+          "squadra": "Torino"
+        },
+        {
+          "id": 6572,
+          "nome": "Castro S.",
+          "squadra": "Roma"
+        },
+        {
+          "id": 4371,
+          "nome": "Raspadori",
+          "squadra": "Atalanta"
+        },
+        {
+          "id": 4510,
+          "nome": "Leao",
+          "squadra": "Milan"
+        },
+        {
+          "id": 7351,
+          "nome": "Santos A.",
+          "squadra": "Napoli"
+        },
+        {
+          "id": 6675,
+          "nome": "Dovbyk",
+          "squadra": "Bologna"
+        },
+        {
+          "id": 4923,
+          "nome": "Colombo",
+          "squadra": "Genoa"
+        }
+      ],
+      [
+        {
+          "id": 2038,
+          "nome": "Pinamonti",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 7023,
+          "nome": "Pellegrino M.",
+          "squadra": "Fiorentina"
+        },
+        {
+          "id": 6967,
+          "nome": "Diao",
+          "squadra": "Como"
+        },
+        {
+          "id": 7484,
+          "nome": "Adams A.",
+          "squadra": "Venezia"
+        },
+        {
+          "id": 5734,
+          "nome": "Soulè",
+          "squadra": "Roma"
+        },
+        {
+          "id": 6229,
+          "nome": "Tourè E.",
+          "squadra": "Parma"
+        },
+        {
+          "id": 4463,
+          "nome": "Esposito Se.",
+          "squadra": "Sassuolo"
+        },
+        {
+          "id": 7347,
+          "nome": "Bowie",
+          "squadra": "Sassuolo"
+        }
+      ],
+      [
+        {
+          "id": 7612,
+          "nome": "Bobcek",
+          "squadra": "Frosinone"
+        },
+        {
+          "id": 5544,
+          "nome": "David",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 7547,
+          "nome": "Kevin Carlos",
+          "squadra": "Cagliari"
+        },
+        {
+          "id": 4359,
+          "nome": "Piccoli",
+          "squadra": "Bologna"
+        },
+        {
+          "id": 7554,
+          "nome": "Romero D.",
+          "squadra": "Parma"
+        },
+        {
+          "id": 6646,
+          "nome": "Adams C.",
+          "squadra": "Torino"
+        },
+        {
+          "id": 2155,
+          "nome": "Cutrone",
+          "squadra": "Monza"
+        },
+        {
+          "id": 5672,
+          "nome": "Dia",
+          "squadra": "Lazio"
+        }
+      ],
+      [
+        {
+          "id": 7600,
+          "nome": "Osmajic",
+          "squadra": "Genoa"
+        },
+        {
+          "id": 6904,
+          "nome": "Yeboah J.",
+          "squadra": "Venezia"
+        },
+        {
+          "id": 2832,
+          "nome": "Boga",
+          "squadra": "Juventus"
+        },
+        {
+          "id": 7313,
+          "nome": "Ratkov",
+          "squadra": "Lazio"
+        },
+        {
+          "id": 5029,
+          "nome": "Geubbels",
+          "squadra": "Lecce"
+        },
+        {
+          "id": 6530,
+          "nome": "Ghedjemis",
+          "squadra": "Frosinone"
+        },
+        {
+          "id": 4896,
+          "nome": "Maldini",
+          "squadra": "Cagliari"
+        },
+        {
+          "id": 6519,
+          "nome": "Camarda",
+          "squadra": "Milan"
+        }
+      ]
+    ],
+    "bonus": [
+      {
+        "id": 7523,
+        "nome": "Varela G.",
+        "squadra": "Monza"
+      },
+      {
+        "id": 6669,
+        "nome": "Bonny",
+        "squadra": "Inter"
+      },
+      {
+        "id": 7449,
+        "nome": "Rrahmani Al.",
+        "squadra": "Venezia"
+      },
+      {
+        "id": 608,
+        "nome": "Zapata D.",
+        "squadra": "Torino"
+      },
+      {
+        "id": 7602,
+        "nome": "Fatah",
+        "squadra": "Lecce"
+      },
+      {
+        "id": 6204,
+        "nome": "Kvernadze",
+        "squadra": "Frosinone"
+      },
+      {
+        "id": 6831,
+        "nome": "Neres",
+        "squadra": "Napoli"
+      },
+      {
+        "id": 6556,
+        "nome": "Noslin",
+        "squadra": "Lazio"
+      },
+      {
+        "id": 6164,
+        "nome": "Vitinha O.",
+        "squadra": "Genoa"
+      },
+      {
+        "id": 7001,
+        "nome": "N'Dri",
+        "squadra": "Lecce"
+      }
+    ]
+  }
+};
+/* === PLAYERS_DATA_END === */
+
+(() => {
+  const BUDGET = 300;
+  const SLOTS = { P: 3, D: 9, C: 9, A: 6 };
+  const ROLE_LABELS = { P: "Portieri", D: "Difensori", C: "Centrocampisti", A: "Attaccanti" };
+  const STORAGE_KEY = "fantaAstaState_v1";
+
+  const state = {
+    role: "P",
+    tool: "taken",
+    query: "",
+    showHidden: false,
+    flags: {},   // id -> { taken, mine, liked, risk, hidden }
+    roster: [],  // { id, role, credits }
+    pendingMineId: null,
+    editingRosterId: null,
+    creditInput: "",
+  };
+
+  const $ = (sel) => document.querySelector(sel);
+  const listEl = $("#list");
+  const toastEl = $("#toast");
+  let toastTimer = null;
+  let storageWarned = false;
+
+  function allPlayersFlat() {
+    const out = [];
+    for (const p of PLAYERS.P || []) out.push({ ...p, r: "P" });
+    for (const role of ["D", "C", "A"]) {
+      const block = PLAYERS[role] || { tiers: [], bonus: [] };
+      for (const tier of block.tiers || []) {
+        for (const p of tier) out.push({ ...p, r: role });
+      }
+      for (const p of block.bonus || []) out.push({ ...p, r: role });
+    }
+    return out;
+  }
+
+  function playerMap() {
+    const m = new Map();
+    for (const p of allPlayersFlat()) m.set(String(p.id), p);
+    return m;
+  }
+
+  function getFlags(id) {
+    const k = String(id);
+    if (!state.flags[k]) {
+      state.flags[k] = { taken: false, mine: false, liked: false, risk: false, hidden: false };
+    }
+    return state.flags[k];
+  }
+
+  function spent() {
+    return state.roster.reduce((s, x) => s + (Number(x.credits) || 0), 0);
+  }
+
+  function remaining() {
+    return BUDGET - spent();
+  }
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+  }
+
+  function save() {
+    const payload = {
+      dataStamp: PLAYERS.dataStamp || "",
+      role: state.role,
+      tool: state.tool,
+      showHidden: state.showHidden,
+      flags: state.flags,
+      roster: state.roster,
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (_) {
+      // Avvisa una sola volta: senza salvataggio l'asta si perde chiudendo la pagina
+      if (!storageWarned) {
+        storageWarned = true;
+        toast("Salvataggio non disponibile: non chiudere la pagina");
+      }
+    }
+  }
+
+  function reconcile(saved) {
+    const map = playerMap();
+    const validIds = new Set(map.keys());
+    const flags = {};
+    for (const [id, f] of Object.entries(saved.flags || {})) {
+      if (validIds.has(String(id))) flags[String(id)] = {
+        taken: !!f.taken,
+        mine: !!f.mine,
+        liked: !!f.liked,
+        risk: !!f.risk,
+        hidden: !!f.hidden,
+      };
+    }
+    const roster = [];
+    for (const slot of saved.roster || []) {
+      const id = String(slot.id);
+      if (!validIds.has(id)) continue;
+      const p = map.get(id);
+      roster.push({
+        id: p.id,
+        role: p.r,
+        credits: Math.max(0, Math.floor(Number(slot.credits) || 0)),
+      });
+      const f = flags[id] || { taken: false, mine: false, liked: false, risk: false, hidden: false };
+      f.mine = true;
+      f.taken = false;
+      flags[id] = f;
+    }
+    // Cap roster by role
+    const byRole = { P: [], D: [], C: [], A: [] };
+    for (const s of roster) {
+      if ((byRole[s.role] || []).length < SLOTS[s.role]) byRole[s.role].push(s);
+    }
+    return {
+      flags,
+      roster: [...byRole.P, ...byRole.D, ...byRole.C, ...byRole.A],
+    };
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      const { flags, roster } = reconcile(saved);
+      state.flags = flags;
+      state.roster = roster;
+      if (saved.role && ROLE_LABELS[saved.role]) state.role = saved.role;
+      if (saved.tool) state.tool = saved.tool;
+      state.showHidden = !!saved.showHidden;
+    } catch (_) { /* ignore */ }
+  }
+
+  function updateCreditsChip() {
+    const left = remaining();
+    const chip = $("#creditsChip");
+    $("#creditsLeft").textContent = String(left);
+    chip.classList.toggle("over", left < 0);
+  }
+
+  function updateToolbar() {
+    document.querySelectorAll(".tool").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.tool === state.tool);
+    });
+  }
+
+  function updateRoleTabs() {
+    document.querySelectorAll(".role-tab").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.role === state.role);
+    });
+  }
+
+  function matchesQuery(p, q) {
+    if (!q) return true;
+    const hay = `${p.nome} ${p.squadra}`.toLowerCase();
+    return hay.includes(q);
+  }
+
+  function renderList() {
+    const q = state.query.trim().toLowerCase();
+    const role = state.role;
+    let html = "";
+
+    html += `<div class="filter-bar">
+      <button type="button" class="chip-toggle ${state.showHidden ? "on" : ""}" id="toggleHidden">
+        ${state.showHidden ? "Nascondi nascosti" : "Mostra nascosti"}
+      </button>
+    </div>`;
+
+    if (role === "P") {
+      const players = (PLAYERS.P || []).filter((p) => {
+        const f = getFlags(p.id);
+        if (f.hidden && !state.showHidden) return false;
+        return matchesQuery(p, q);
+      });
+      if (!players.length) {
+        html += `<div class="empty-state">Nessun portiere trovato</div>`;
+      } else {
+        html += `<section class="tier">
+          <div class="tier-head"><span>Titolari (1 per squadra)</span><span class="tier-count">${players.length}</span></div>
+          <div class="tier-body">${players.map((p) => playerRow(p)).join("")}</div>
+        </section>`;
+      }
+    } else {
+      const block = PLAYERS[role] || { tiers: [], bonus: [] };
+      let any = false;
+      (block.tiers || []).forEach((tier, idx) => {
+        const visible = tier.filter((p) => {
+          const f = getFlags(p.id);
+          if (f.hidden && !state.showHidden) return false;
+          return matchesQuery(p, q);
+        });
+        if (!visible.length) return;
+        any = true;
+        html += `<section class="tier">
+          <div class="tier-head"><span>Fascia ${idx + 1}</span><span class="tier-count">${visible.length}</span></div>
+          <div class="tier-body">${visible.map((p) => playerRow(p)).join("")}</div>
+        </section>`;
+      });
+      const bonus = (block.bonus || []).filter((p) => {
+        const f = getFlags(p.id);
+        if (f.hidden && !state.showHidden) return false;
+        return matchesQuery(p, q);
+      });
+      if (bonus.length) {
+        any = true;
+        html += `<section class="tier bonus">
+          <div class="tier-head"><span>Fascia bonus</span><span class="tier-count">${bonus.length}</span></div>
+          <div class="tier-body">${bonus.map((p) => playerRow(p)).join("")}</div>
+        </section>`;
+      }
+      if (!any) html += `<div class="empty-state">Nessun giocatore trovato</div>`;
+    }
+
+    listEl.innerHTML = html;
+    const th = $("#toggleHidden");
+    if (th) {
+      th.addEventListener("click", () => {
+        state.showHidden = !state.showHidden;
+        save();
+        renderList();
+      });
+    }
+  }
+
+  function playerRow(p) {
+    const f = getFlags(p.id);
+    const classes = ["player"];
+    if (f.mine) classes.push("mine");
+    if (f.taken) classes.push("taken");
+    if (f.liked) classes.push("liked");
+    if (f.hidden) classes.push("hidden-row");
+    const badges = [];
+    if (f.risk) badges.push(`<span class="badge risk">R</span>`);
+    if (f.liked) badges.push(`<span class="badge like">★</span>`);
+    if (f.mine) {
+      const slot = state.roster.find((x) => String(x.id) === String(p.id));
+      const cr = slot ? slot.credits : "";
+      badges.push(`<span class="badge mine">${cr !== "" ? cr + " cr" : "MIO"}</span>`);
+    } else if (f.taken) {
+      badges.push(`<span class="badge taken">OUT</span>`);
+    }
+    return `<div class="${classes.join(" ")}" data-id="${p.id}" title="${escapeHtml(p.nome)} · ${escapeHtml(p.squadra)}">
+      <div class="player-name">${escapeHtml(p.nome)}</div>
+      <div class="player-foot">
+        <span class="player-team">${escapeHtml(p.squadra)}</span>
+        <span class="badges">${badges.join("")}</span>
+      </div>
+    </div>`;
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function roleCount(role) {
+    return state.roster.filter((x) => x.role === role).length;
+  }
+
+  function applyTool(id) {
+    const map = playerMap();
+    const p = map.get(String(id));
+    if (!p) return;
+    const f = getFlags(id);
+    const tool = state.tool;
+
+    if (tool === "taken") {
+      if (f.mine) {
+        removeFromRoster(id);
+      }
+      f.taken = !f.taken;
+      if (f.taken) f.mine = false;
+    } else if (tool === "mine") {
+      if (f.mine) {
+        openCreditsModal(p, true);
+        return;
+      }
+      if (roleCount(p.r) >= SLOTS[p.r]) {
+        toast(`${ROLE_LABELS[p.r]}: rosa piena (${SLOTS[p.r]})`);
+        return;
+      }
+      openCreditsModal(p, false);
+      return;
+    } else if (tool === "hide") {
+      f.hidden = !f.hidden;
+    } else if (tool === "like") {
+      f.liked = !f.liked;
+    } else if (tool === "risk") {
+      f.risk = !f.risk;
+    } else if (tool === "clear") {
+      if (f.mine) removeFromRoster(id);
+      f.taken = false;
+      f.mine = false;
+      f.liked = false;
+      f.risk = false;
+      f.hidden = false;
+    }
+
+    save();
+    updateCreditsChip();
+    renderList();
+  }
+
+  function removeFromRoster(id) {
+    state.roster = state.roster.filter((x) => String(x.id) !== String(id));
+    const f = getFlags(id);
+    f.mine = false;
+  }
+
+  function addOrUpdateRoster(p, credits) {
+    const id = String(p.id);
+    const existing = state.roster.find((x) => String(x.id) === id);
+    if (existing) {
+      existing.credits = credits;
+    } else {
+      if (roleCount(p.r) >= SLOTS[p.r]) {
+        toast(`${ROLE_LABELS[p.r]}: rosa piena (${SLOTS[p.r]})`);
+        return false;
+      }
+      state.roster.push({ id: p.id, role: p.r, credits });
+    }
+    const f = getFlags(id);
+    f.mine = true;
+    f.taken = false;
+    return true;
+  }
+
+  // Credits modal
+  function openCreditsModal(p, isEdit) {
+    state.pendingMineId = p.id;
+    state.editingRosterId = isEdit ? p.id : null;
+    const slot = state.roster.find((x) => String(x.id) === String(p.id));
+    state.creditInput = slot ? String(slot.credits) : "";
+    $("#creditsModalTitle").textContent = isEdit ? "Modifica crediti" : "Crediti spesi";
+    $("#creditsModalSub").textContent = `${p.nome} · ${p.squadra}`;
+    $("#creditsRemove").style.display = isEdit ? "" : "none";
+    updateCreditsDisplay();
+    $("#creditsModal").classList.add("open");
+  }
+
+  function closeCreditsModal() {
+    $("#creditsModal").classList.remove("open");
+    state.pendingMineId = null;
+    state.editingRosterId = null;
+    state.creditInput = "";
+  }
+
+  function updateCreditsDisplay() {
+    $("#creditsDisplay").textContent = state.creditInput === "" ? "0" : state.creditInput;
+  }
+
+  function buildKeypad() {
+    const keys = ["1","2","3","4","5","6","7","8","9","⌫","0","C"];
+    const pad = $("#keypad");
+    pad.innerHTML = keys.map((k) => `<button type="button" class="key" data-k="${k}">${k}</button>`).join("");
+    pad.addEventListener("click", (e) => {
+      const btn = e.target.closest(".key");
+      if (!btn) return;
+      const k = btn.dataset.k;
+      if (k === "C") state.creditInput = "";
+      else if (k === "⌫") state.creditInput = state.creditInput.slice(0, -1);
+      else {
+        if (state.creditInput.length >= 3) return;
+        if (state.creditInput === "0") state.creditInput = k;
+        else state.creditInput += k;
+      }
+      updateCreditsDisplay();
+    });
+  }
+
+  function confirmCredits() {
+    const map = playerMap();
+    const p = map.get(String(state.pendingMineId));
+    if (!p) { closeCreditsModal(); return; }
+    const credits = Math.max(0, parseInt(state.creditInput || "0", 10) || 0);
+    if (addOrUpdateRoster(p, credits)) {
+      save();
+      updateCreditsChip();
+      renderList();
+      if (remaining() < 0) toast("Attenzione: budget oltre i 300");
+      closeCreditsModal();
+      if ($("#rosterOverlay").classList.contains("open")) renderRoster();
+    }
+  }
+
+  function renderRoster() {
+    const map = playerMap();
+    const rem = remaining();
+    let html = `<div class="roster-summary">
+      <div class="stat"><div class="v">${spent()}</div><div class="k">Spesi</div></div>
+      <div class="stat ${rem < 0 ? "over" : ""}"><div class="v">${rem}</div><div class="k">Rimasti</div></div>
+      <div class="stat"><div class="v">${state.roster.length}/27</div><div class="k">Giocatori</div></div>
+    </div>`;
+
+    for (const role of ["P", "D", "C", "A"]) {
+      const slots = state.roster.filter((x) => x.role === role);
+      html += `<div class="roster-role"><h3>${ROLE_LABELS[role]} (${slots.length}/${SLOTS[role]})</h3>`;
+      for (let i = 0; i < SLOTS[role]; i++) {
+        const s = slots[i];
+        if (s) {
+          const p = map.get(String(s.id));
+          const nome = p ? p.nome : "?";
+          const squadra = p ? p.squadra : "";
+          html += `<div class="slot filled" data-roster-id="${s.id}">
+            <div class="slot-idx">${i + 1}</div>
+            <div class="slot-info">
+              <div class="slot-name">${escapeHtml(nome)}</div>
+              <div class="slot-team">${escapeHtml(squadra)}</div>
+            </div>
+            <div class="slot-credits">${s.credits}</div>
+          </div>`;
+        } else {
+          html += `<div class="slot">
+            <div class="slot-idx">${i + 1}</div>
+            <div class="slot-info"><div class="slot-empty">Slot libero</div></div>
+          </div>`;
+        }
+      }
+      html += `</div>`;
+    }
+    $("#rosterBody").innerHTML = html;
+  }
+
+  function openRoster() {
+    renderRoster();
+    $("#rosterOverlay").classList.add("open");
+  }
+  function closeRoster() {
+    $("#rosterOverlay").classList.remove("open");
+  }
+
+  function resetAuction() {
+    if (!confirm("Azzerare tutta l'asta? Segni, rosa e crediti verranno cancellati.")) return;
+    state.flags = {};
+    state.roster = [];
+    save();
+    updateCreditsChip();
+    renderList();
+    if ($("#rosterOverlay").classList.contains("open")) renderRoster();
+    toast("Asta azzerata");
+  }
+
+  // Events
+  $("#roleTabs").addEventListener("click", (e) => {
+    const btn = e.target.closest(".role-tab");
+    if (!btn) return;
+    state.role = btn.dataset.role;
+    save();
+    updateRoleTabs();
+    renderList();
+    listEl.scrollTop = 0;
+  });
+
+  $("#toolbar").addEventListener("click", (e) => {
+    const btn = e.target.closest(".tool");
+    if (!btn) return;
+    state.tool = btn.dataset.tool;
+    save();
+    updateToolbar();
+  });
+
+  listEl.addEventListener("click", (e) => {
+    const row = e.target.closest(".player");
+    if (!row) return;
+    applyTool(row.dataset.id);
+  });
+
+  $("#search").addEventListener("input", (e) => {
+    state.query = e.target.value;
+    renderList();
+  });
+  $("#searchClear").addEventListener("click", () => {
+    $("#search").value = "";
+    state.query = "";
+    renderList();
+  });
+
+  $("#creditsChip").addEventListener("click", openRoster);
+  $("#closeRoster").addEventListener("click", closeRoster);
+  $("#rosterOverlay").addEventListener("click", (e) => {
+    if (e.target === $("#rosterOverlay")) closeRoster();
+  });
+  $("#rosterBody").addEventListener("click", (e) => {
+    const slot = e.target.closest("[data-roster-id]");
+    if (!slot) return;
+    const map = playerMap();
+    const p = map.get(String(slot.dataset.rosterId));
+    if (p) openCreditsModal(p, true);
+  });
+
+  $("#creditsCancel").addEventListener("click", closeCreditsModal);
+  $("#creditsConfirm").addEventListener("click", confirmCredits);
+  $("#creditsRemove").addEventListener("click", () => {
+    if (state.editingRosterId != null) {
+      removeFromRoster(state.editingRosterId);
+      save();
+      updateCreditsChip();
+      renderList();
+      renderRoster();
+      closeCreditsModal();
+    }
+  });
+  $("#creditsModal").addEventListener("click", (e) => {
+    if (e.target === $("#creditsModal")) closeCreditsModal();
+  });
+
+  $("#resetBtn").addEventListener("click", resetAuction);
+
+  // Schermo intero: disponibile su iPad e desktop, non su iPhone
+  const fsTarget = document.documentElement;
+  const canFullscreen = !!(fsTarget.requestFullscreen || fsTarget.webkitRequestFullscreen);
+  const fsBtn = $("#fsBtn");
+  if (canFullscreen) {
+    fsBtn.style.display = "";
+    const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const syncFsLabel = () => { fsBtn.textContent = isFull() ? "Esci schermo intero" : "Schermo intero"; };
+    fsBtn.addEventListener("click", () => {
+      if (isFull()) {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      } else {
+        (fsTarget.requestFullscreen || fsTarget.webkitRequestFullscreen).call(fsTarget);
+      }
+    });
+    document.addEventListener("fullscreenchange", syncFsLabel);
+    document.addEventListener("webkitfullscreenchange", syncFsLabel);
+  }
+
+  // Funzionamento offline quando la pagina è online (ignorato se aperta come file locale)
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+
+  // Init
+  load();
+  buildKeypad();
+  $("#dataStampLabel").textContent = PLAYERS.dataStamp || "";
+  updateRoleTabs();
+  updateToolbar();
+  updateCreditsChip();
+  renderList();
+})();
+  </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 *.xls
 
 # File temporanei di verifica
-_tmp_*.html
-check-*.png
+_tmp_*
+*check*.png
 v-*.png
 __pycache__/

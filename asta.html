@@ -96,6 +96,28 @@
     .credits-chip.over { border-color: var(--danger); color: var(--danger); }
     .credits-chip .label { font-size: 11px; font-weight: 600; color: var(--muted); }
 
+    .plans-chip {
+      flex: 0 0 auto;
+      min-width: 78px;
+      height: 44px;
+      border-radius: 22px;
+      border: 2px solid var(--border);
+      background: var(--bg3);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 15px;
+      padding: 0 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      cursor: pointer;
+    }
+    .plans-chip:active { background: #2c3a4d; }
+    .plans-chip .plan-label { font-size: 11px; font-weight: 700; color: var(--accent); }
+    .plans-chip .plan-label:empty { display: none; }
+
     .search-wrap { flex: 1; position: relative; }
     .search-wrap input {
       width: 100%;
@@ -125,15 +147,24 @@
     .role-tab {
       min-width: 0;
       overflow: hidden;
-      height: 42px;
+      min-height: 48px;
       border-radius: 10px;
       border: 1px solid var(--border);
       background: var(--bg);
       color: var(--muted);
       font-weight: 700;
-      font-size: 15px;
+      font-size: 13px;
       cursor: pointer;
+      padding: 5px 3px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.15;
     }
+    .role-tab .role-residual { min-height: 13px; font-size: 11px; font-weight: 800; color: var(--text); }
+    .role-tab .role-residual.empty { visibility: hidden; }
+    .role-tab .role-residual.over { color: var(--danger); }
     .role-tab.active[data-role="P"] { background: rgba(79,195,247,.18); color: var(--p); border-color: var(--p); }
     .role-tab.active[data-role="D"] { background: rgba(102,187,106,.18); color: var(--d); border-color: var(--d); }
     .role-tab.active[data-role="C"] { background: rgba(255,167,38,.18); color: var(--c); border-color: var(--c); }
@@ -166,8 +197,13 @@
       letter-spacing: .02em;
       text-transform: uppercase;
       color: var(--muted);
+      cursor: pointer;
     }
+    .tier-head:active { background: #2c3a4d; }
     .tier.bonus .tier-head { color: var(--bonus); }
+    .tier-meta { display: flex; align-items: center; gap: 8px; }
+    .tier-value { font-weight: 800; font-size: 12px; color: var(--accent); text-transform: none; }
+    .tier-value.empty { color: var(--muted); font-weight: 600; opacity: .7; }
     .tier-count { font-weight: 600; font-size: 12px; opacity: .8; }
 
     /* Griglia di card: quante ne stanno per riga lo decide la larghezza dello schermo */
@@ -253,6 +289,8 @@
       :root { --card-min: 128px; }
       .player-name { font-size: 16px; }
       .tool { font-size: 10px; }
+      .credits-chip { min-width: 82px; padding: 0 10px; }
+      .plans-chip { min-width: 62px; padding: 0 10px; font-size: 13px; }
     }
     /* iPad in verticale e oltre: card più larghe e nomi più grandi */
     @media (min-width: 700px) {
@@ -402,6 +440,24 @@
       letter-spacing: .04em;
       color: var(--muted);
     }
+    .roster-plan-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin: -3px 0 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .roster-plan-line .over { color: var(--danger); font-weight: 700; }
+    .plan-progress {
+      height: 5px;
+      margin-bottom: 9px;
+      overflow: hidden;
+      border-radius: 3px;
+      background: var(--bg3);
+    }
+    .plan-progress > span { display: block; height: 100%; background: var(--mine); border-radius: inherit; }
+    .plan-progress.over > span { background: var(--danger); }
     .slot {
       display: flex;
       align-items: center;
@@ -486,6 +542,22 @@
     .key:active { background: var(--accent); color: #061018; }
     .modal-actions { display: flex; gap: 8px; }
     .modal-actions .btn { flex: 1; height: 48px; font-size: 16px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px; }
+    .field label, .plan-row label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+    .field input, .plan-row input, .plan-name {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      padding: 0 12px;
+      font-size: 16px;
+      outline: none;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+    .field input:focus, .plan-row input:focus, .plan-name:focus { border-color: var(--accent); }
 
     .toast {
       position: fixed;
@@ -526,7 +598,68 @@
       cursor: pointer;
       padding: 4px;
     }
+    .meta-left { min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; }
+    #dataStampLabel { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #activePlanBtn { white-space: nowrap; color: var(--accent); font-weight: 700; }
+    #planUnitBtn {
+      min-width: 30px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 800;
+      color: var(--text);
+    }
     .meta-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    .plan-picker-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .plan-chips {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+      gap: 10px;
+      padding-bottom: 16px;
+    }
+    .plan-chip {
+      min-height: 54px;
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      background: var(--bg);
+      color: var(--muted);
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .plan-chip:active { background: var(--bg3); }
+    .plan-chip.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(91,159,212,.22);
+      box-shadow: 0 0 0 1px var(--accent) inset;
+    }
+    .plan-chip.active::before { content: "✓ "; color: var(--accent); font-weight: 900; }
+    #newPlanBtn {
+      border-style: dashed;
+      color: var(--accent);
+    }
+    .plan-empty { padding: 28px 10px; text-align: center; color: var(--muted); }
+    .plan-editor { border-top: 1px solid var(--border); padding-top: 14px; }
+    .plan-name { font-weight: 700; margin-bottom: 12px; }
+    .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border-radius: 12px; background: var(--bg); margin-bottom: 14px; }
+    .segmented button { height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; }
+    .segmented button.active { background: var(--bg3); color: var(--text); }
+    .plan-row { display: grid; grid-template-columns: 1fr 104px 75px; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .plan-role { font-weight: 700; }
+    .plan-secondary { color: var(--muted); font-size: 12px; text-align: right; }
+    .plan-total { display: flex; justify-content: space-between; margin: 14px 0; padding-top: 12px; border-top: 1px solid var(--border); font-weight: 800; }
+    .plan-total.ok { color: var(--mine); }
+    .plan-total.bad { color: var(--danger); }
 
     .filter-bar {
       display: flex;
@@ -580,19 +713,27 @@
           <span id="creditsLeft">300</span>
           <span class="label">/300</span>
         </button>
+        <button type="button" class="plans-chip" id="plansBtn" title="Piani di spesa">
+          <span>Piani</span>
+          <span class="plan-label" id="plansBtnPlan"></span>
+        </button>
         <div class="search-wrap">
           <input id="search" type="search" placeholder="Cerca nome o squadra…" autocomplete="off" enterkeyhint="search" />
           <button type="button" class="search-clear" id="searchClear" aria-label="Pulisci">×</button>
         </div>
       </div>
       <div class="role-tabs" id="roleTabs">
-        <button type="button" class="role-tab active" data-role="P">Portieri</button>
-        <button type="button" class="role-tab" data-role="D">Difensori</button>
-        <button type="button" class="role-tab" data-role="C">Centroc.</button>
-        <button type="button" class="role-tab" data-role="A">Attaccanti</button>
+        <button type="button" class="role-tab active" data-role="P"><span>Portieri</span><span class="role-residual empty"></span></button>
+        <button type="button" class="role-tab" data-role="D"><span>Difensori</span><span class="role-residual empty"></span></button>
+        <button type="button" class="role-tab" data-role="C"><span>Centroc.</span><span class="role-residual empty"></span></button>
+        <button type="button" class="role-tab" data-role="A"><span>Attaccanti</span><span class="role-residual empty"></span></button>
       </div>
       <div class="meta-bar">
-        <span id="dataStampLabel"></span>
+        <span class="meta-left">
+          <span id="dataStampLabel"></span>
+          <button type="button" id="activePlanBtn" style="display:none"></button>
+          <button type="button" id="planUnitBtn" style="display:none">cr</button>
+        </span>
         <span class="meta-actions">
           <button type="button" id="fsBtn" style="display:none">Schermo intero</button>
           <button type="button" id="resetBtn">Reset asta</button>
@@ -615,13 +756,32 @@
   <div class="overlay" id="rosterOverlay">
     <div class="sheet" id="rosterSheet">
       <div class="sheet-head">
-        <h2>La mia rosa</h2>
+        <div>
+          <h2>La mia rosa</h2>
+          <button type="button" id="rosterPlanBtn" class="btn ghost" style="display:none"></button>
+        </div>
         <div class="sheet-actions">
           <button type="button" class="btn ghost" id="closeRoster">Chiudi</button>
         </div>
       </div>
       <div class="roster-summary" id="rosterSummary"></div>
       <div class="sheet-body" id="rosterBody"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="plansOverlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h2>Piani</h2>
+        <div class="sheet-actions">
+          <button type="button" class="btn ghost" id="closePlans">Chiudi</button>
+        </div>
+      </div>
+      <div class="sheet-body">
+        <div class="plan-picker-title">Scegli il piano attivo</div>
+        <div class="plan-chips" id="planChips"></div>
+        <div id="planEditor"></div>
+      </div>
     </div>
   </div>
 
@@ -635,6 +795,22 @@
         <button type="button" class="btn ghost" id="creditsCancel">Annulla</button>
         <button type="button" class="btn danger" id="creditsRemove" style="display:none">Togli</button>
         <button type="button" class="btn primary" id="creditsConfirm">Conferma</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="tierValueModal">
+    <div class="modal-card">
+      <h3 id="tierValueTitle">Valore fascia</h3>
+      <div class="modal-sub">Inserisci la tua valutazione in crediti.</div>
+      <div class="field-row">
+        <div class="field"><label for="tierMin">Da</label><input id="tierMin" type="number" min="0" step="1" inputmode="numeric" /></div>
+        <div class="field"><label for="tierMax">A</label><input id="tierMax" type="number" min="0" step="1" inputmode="numeric" /></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="tierValueCancel">Annulla</button>
+        <button type="button" class="btn danger" id="tierValueRemove" style="display:none">Togli</button>
+        <button type="button" class="btn primary" id="tierValueConfirm">Conferma</button>
       </div>
     </div>
   </div>
@@ -1930,6 +2106,8 @@ const PLAYERS = {
   const BUDGET = 300;
   const SLOTS = { P: 3, D: 9, C: 9, A: 6 };
   const ROLE_LABELS = { P: "Portieri", D: "Difensori", C: "Centrocampisti", A: "Attaccanti" };
+  const ROLE_SHORT = { P: "Porta", D: "Difesa", C: "Centrocampo", A: "Attacco" };
+  const ROLES = ["P", "D", "C", "A"];
   const STORAGE_KEY = "fantaAstaState_v1";
 
   const state = {
@@ -1939,9 +2117,16 @@ const PLAYERS = {
     showHidden: false,
     flags: {},   // id -> { taken, mine, liked, risk, hidden }
     roster: [],  // { id, role, credits }
+    plans: [],
+    activePlanId: null,
+    planUnit: "cr",
+    tierValues: {},
+    planEditUnit: "cr",
     pendingMineId: null,
     editingRosterId: null,
     creditInput: "",
+    pendingTierRole: null,
+    pendingTierKey: null,
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -1981,6 +2166,21 @@ const PLAYERS = {
     return state.roster.reduce((s, x) => s + (Number(x.credits) || 0), 0);
   }
 
+  function spentByRole(role) {
+    return state.roster
+      .filter((x) => x.role === role)
+      .reduce((sum, x) => sum + (Number(x.credits) || 0), 0);
+  }
+
+  function activePlan() {
+    return state.plans.find((plan) => plan.id === state.activePlanId) || null;
+  }
+
+  function planRemaining(role) {
+    const plan = activePlan();
+    return plan ? (Number(plan.alloc[role]) || 0) - spentByRole(role) : null;
+  }
+
   function remaining() {
     return BUDGET - spent();
   }
@@ -2000,6 +2200,10 @@ const PLAYERS = {
       showHidden: state.showHidden,
       flags: state.flags,
       roster: state.roster,
+      plans: state.plans,
+      activePlanId: state.activePlanId,
+      planUnit: state.planUnit,
+      tierValues: state.tierValues,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -2062,6 +2266,20 @@ const PLAYERS = {
       if (saved.role && ROLE_LABELS[saved.role]) state.role = saved.role;
       if (saved.tool) state.tool = saved.tool;
       state.showHidden = !!saved.showHidden;
+      state.plans = (Array.isArray(saved.plans) ? saved.plans : []).map((plan, idx) => ({
+        id: String(plan.id || `p${idx + 1}`),
+        name: String(plan.name || `Piano ${idx + 1}`).slice(0, 60),
+        alloc: Object.fromEntries(ROLES.map((role) => [
+          role,
+          Math.max(0, Math.round(Number(plan.alloc && plan.alloc[role]) || 0)),
+        ])),
+      }));
+      const savedActivePlanId = saved.activePlanId == null ? null : String(saved.activePlanId);
+      state.activePlanId = state.plans.some((plan) => plan.id === savedActivePlanId)
+        ? savedActivePlanId
+        : null;
+      state.planUnit = saved.planUnit === "pct" ? "pct" : "cr";
+      state.tierValues = saved.tierValues && typeof saved.tierValues === "object" ? saved.tierValues : {};
     } catch (_) { /* ignore */ }
   }
 
@@ -2079,9 +2297,38 @@ const PLAYERS = {
   }
 
   function updateRoleTabs() {
+    const plan = activePlan();
     document.querySelectorAll(".role-tab").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.role === state.role);
+      const residual = btn.querySelector(".role-residual");
+      if (!residual) return;
+      if (!plan) {
+        residual.textContent = "";
+        residual.className = "role-residual empty";
+        return;
+      }
+      const role = btn.dataset.role;
+      const rem = planRemaining(role);
+      const alloc = Number(plan.alloc[role]) || 0;
+      residual.textContent = state.planUnit === "pct"
+        ? (alloc ? `${Math.round(rem / alloc * 100)}%` : "—")
+        : String(rem);
+      residual.className = `role-residual${rem < 0 ? " over" : ""}`;
     });
+  }
+
+  function updatePlanUi() {
+    const plan = activePlan();
+    const activeBtn = $("#activePlanBtn");
+    const unitBtn = $("#planUnitBtn");
+    const plansLabel = $("#plansBtnPlan");
+    activeBtn.style.display = plan ? "" : "none";
+    unitBtn.style.display = plan ? "" : "none";
+    if (plansLabel) plansLabel.textContent = plan ? plan.name : "";
+    if (plan) {
+      activeBtn.textContent = `${plan.name} ·`;
+      unitBtn.textContent = state.planUnit === "pct" ? "%" : "cr";
+    }
   }
 
   function matchesQuery(p, q) {
@@ -2111,7 +2358,7 @@ const PLAYERS = {
         html += `<div class="empty-state">Nessun portiere trovato</div>`;
       } else {
         html += `<section class="tier">
-          <div class="tier-head"><span>Titolari (1 per squadra)</span><span class="tier-count">${players.length}</span></div>
+          ${tierHead("P", "titolari", "Titolari (1 per squadra)", players.length)}
           <div class="tier-body">${players.map((p) => playerRow(p)).join("")}</div>
         </section>`;
       }
@@ -2127,7 +2374,7 @@ const PLAYERS = {
         if (!visible.length) return;
         any = true;
         html += `<section class="tier">
-          <div class="tier-head"><span>Fascia ${idx + 1}</span><span class="tier-count">${visible.length}</span></div>
+          ${tierHead(role, String(idx), `Fascia ${idx + 1}`, visible.length)}
           <div class="tier-body">${visible.map((p) => playerRow(p)).join("")}</div>
         </section>`;
       });
@@ -2139,7 +2386,7 @@ const PLAYERS = {
       if (bonus.length) {
         any = true;
         html += `<section class="tier bonus">
-          <div class="tier-head"><span>Fascia bonus</span><span class="tier-count">${bonus.length}</span></div>
+          ${tierHead(role, "bonus", "Fascia bonus", bonus.length)}
           <div class="tier-body">${bonus.map((p) => playerRow(p)).join("")}</div>
         </section>`;
       }
@@ -2155,6 +2402,35 @@ const PLAYERS = {
         renderList();
       });
     }
+  }
+
+  function tierValue(role, key) {
+    const value = state.tierValues[role] && state.tierValues[role][key];
+    if (!value || !Number.isFinite(Number(value.min)) || !Number.isFinite(Number(value.max))) return null;
+    return { min: Number(value.min), max: Number(value.max) };
+  }
+
+  function tierHead(role, key, label, count) {
+    const value = tierValue(role, key);
+    const range = value ? `${value.min}–${value.max}` : "valuta";
+    return `<div class="tier-head" data-tier-role="${role}" data-tier-key="${key}">
+      <span>${label}</span>
+      <span class="tier-meta"><span class="tier-value ${value ? "" : "empty"}">${range}</span><span class="tier-count">· ${count}</span></span>
+    </div>`;
+  }
+
+  function tierKeyForPlayer(p) {
+    if (p.r === "P") return "titolari";
+    const block = PLAYERS[p.r] || { tiers: [], bonus: [] };
+    const id = String(p.id);
+    const idx = (block.tiers || []).findIndex((tier) => tier.some((item) => String(item.id) === id));
+    if (idx >= 0) return String(idx);
+    return (block.bonus || []).some((item) => String(item.id) === id) ? "bonus" : null;
+  }
+
+  function tierLabel(role, key) {
+    const name = key === "titolari" ? "Titolari" : key === "bonus" ? "Fascia bonus" : `Fascia ${Number(key) + 1}`;
+    return `${name} · ${ROLE_LABELS[role]}`;
   }
 
   function playerRow(p) {
@@ -2236,6 +2512,7 @@ const PLAYERS = {
 
     save();
     updateCreditsChip();
+    updateRoleTabs();
     renderList();
   }
 
@@ -2270,7 +2547,13 @@ const PLAYERS = {
     const slot = state.roster.find((x) => String(x.id) === String(p.id));
     state.creditInput = slot ? String(slot.credits) : "";
     $("#creditsModalTitle").textContent = isEdit ? "Modifica crediti" : "Crediti spesi";
-    $("#creditsModalSub").textContent = `${p.nome} · ${p.squadra}`;
+    const hints = [`${p.nome} · ${p.squadra}`];
+    const plan = activePlan();
+    if (plan) hints.push(`Piano ${ROLE_SHORT[p.r].toLowerCase()}: ${planRemaining(p.r)} rimasti`);
+    const key = tierKeyForPlayer(p);
+    const value = key == null ? null : tierValue(p.r, key);
+    if (value) hints.push(`${tierLabel(p.r, key)}: ${value.min}–${value.max}`);
+    $("#creditsModalSub").innerHTML = hints.map(escapeHtml).join("<br>");
     $("#creditsRemove").style.display = isEdit ? "" : "none";
     updateCreditsDisplay();
     $("#creditsModal").classList.add("open");
@@ -2314,8 +2597,11 @@ const PLAYERS = {
     if (addOrUpdateRoster(p, credits)) {
       save();
       updateCreditsChip();
+      updateRoleTabs();
       renderList();
-      if (remaining() < 0) toast("Attenzione: budget oltre i 300");
+      const roleRem = planRemaining(p.r);
+      if (roleRem != null && roleRem < 0) toast(`${ROLE_SHORT[p.r]}: ${Math.abs(roleRem)} oltre il piano`);
+      else if (remaining() < 0) toast("Attenzione: budget oltre i 300");
       closeCreditsModal();
       if ($("#rosterOverlay").classList.contains("open")) renderRoster();
     }
@@ -2331,9 +2617,24 @@ const PLAYERS = {
     `;
 
     let html = "";
-    for (const role of ["P", "D", "C", "A"]) {
+    const plan = activePlan();
+    const rosterPlanBtn = $("#rosterPlanBtn");
+    rosterPlanBtn.style.display = plan ? "" : "none";
+    rosterPlanBtn.textContent = plan ? `Piano: ${plan.name}` : "";
+    for (const role of ROLES) {
       const slots = state.roster.filter((x) => x.role === role);
       html += `<div class="roster-role"><h3>${ROLE_LABELS[role]} (${slots.length}/${SLOTS[role]})</h3>`;
+      if (plan) {
+        const alloc = Number(plan.alloc[role]) || 0;
+        const roleSpent = spentByRole(role);
+        const remRole = alloc - roleSpent;
+        const progress = alloc ? Math.min(100, Math.round(roleSpent / alloc * 100)) : (roleSpent ? 100 : 0);
+        html += `<div class="roster-plan-line">
+          <span>Piano ${alloc} · Spesi ${roleSpent}</span>
+          <span class="${remRole < 0 ? "over" : ""}">Restano ${remRole}</span>
+        </div>
+        <div class="plan-progress ${remRole < 0 ? "over" : ""}"><span style="width:${progress}%"></span></div>`;
+      }
       for (let i = 0; i < SLOTS[role]; i++) {
         const s = slots[i];
         if (s) {
@@ -2368,12 +2669,138 @@ const PLAYERS = {
     $("#rosterOverlay").classList.remove("open");
   }
 
+  function nextPlanName() {
+    let n = 1;
+    const used = new Set(state.plans.map((plan) => plan.name));
+    while (used.has(`Piano ${n}`)) n++;
+    return `Piano ${n}`;
+  }
+
+  function newPlanId() {
+    return `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  }
+
+  function formatPct(value) {
+    const rounded = Math.round(value * 10) / 10;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  }
+
+  function renderPlans() {
+    const plan = activePlan();
+    $("#planChips").innerHTML = state.plans.map((item) =>
+      `<button type="button" class="plan-chip ${item.id === state.activePlanId ? "active" : ""}" data-plan-id="${escapeHtml(item.id)}">${escapeHtml(item.name)}</button>`
+    ).join("") + `<button type="button" class="plan-chip" id="newPlanBtn">+ Nuovo</button>`;
+
+    if (!plan) {
+      $("#planEditor").innerHTML = `<div class="plan-empty">Crea o seleziona un piano per ripartire i ${BUDGET} crediti.</div>`;
+      return;
+    }
+
+    const total = ROLES.reduce((sum, role) => sum + (Number(plan.alloc[role]) || 0), 0);
+    $("#planEditor").innerHTML = `<div class="plan-editor">
+      <input class="plan-name" id="planNameInput" value="${escapeHtml(plan.name)}" maxlength="60" aria-label="Nome piano" />
+      <div class="segmented" id="planEditUnit">
+        <button type="button" data-unit="cr" class="${state.planEditUnit === "cr" ? "active" : ""}">Crediti</button>
+        <button type="button" data-unit="pct" class="${state.planEditUnit === "pct" ? "active" : ""}">%</button>
+      </div>
+      ${ROLES.map((role) => {
+        const alloc = Number(plan.alloc[role]) || 0;
+        const inputValue = state.planEditUnit === "cr" ? alloc : formatPct(alloc / BUDGET * 100);
+        const secondary = state.planEditUnit === "cr" ? `${formatPct(alloc / BUDGET * 100)}%` : `${alloc} cr`;
+        return `<div class="plan-row">
+          <span class="plan-role">${ROLE_LABELS[role]}</span>
+          <input type="number" min="0" step="${state.planEditUnit === "cr" ? "1" : "0.1"}" inputmode="decimal" data-plan-role="${role}" value="${inputValue}" />
+          <span class="plan-secondary">${secondary}</span>
+        </div>`;
+      }).join("")}
+      <div class="plan-total ${total === BUDGET ? "ok" : "bad"}">
+        <span>Totale</span><span>${total} / ${BUDGET}${total === BUDGET ? "" : " · verifica"}</span>
+      </div>
+      <button type="button" class="btn danger" id="deletePlanBtn">Elimina piano</button>
+    </div>`;
+  }
+
+  function openPlans() {
+    renderPlans();
+    $("#plansOverlay").classList.add("open");
+  }
+
+  function closePlans() {
+    $("#plansOverlay").classList.remove("open");
+  }
+
+  function refreshPlanSurfaces() {
+    save();
+    updatePlanUi();
+    updateRoleTabs();
+    renderList();
+    if ($("#rosterOverlay").classList.contains("open")) renderRoster();
+  }
+
+  function setPlanPercentages() {
+    const plan = activePlan();
+    if (!plan) return;
+    const values = {};
+    document.querySelectorAll("[data-plan-role]").forEach((input) => {
+      values[input.dataset.planRole] = Math.max(0, Number(input.value) || 0);
+    });
+    const totalPct = ROLES.reduce((sum, role) => sum + values[role], 0);
+    const raw = Object.fromEntries(ROLES.map((role) => [role, values[role] / 100 * BUDGET]));
+    const alloc = Object.fromEntries(ROLES.map((role) => [role, Math.floor(raw[role])]));
+    if (Math.abs(totalPct - 100) < 0.001) {
+      const largest = ROLES.reduce((best, role) => values[role] > values[best] ? role : best, "P");
+      alloc[largest] += BUDGET - ROLES.reduce((sum, role) => sum + alloc[role], 0);
+    } else {
+      ROLES.forEach((role) => { alloc[role] = Math.round(raw[role]); });
+    }
+    plan.alloc = alloc;
+  }
+
+  function openTierValueModal(role, key) {
+    state.pendingTierRole = role;
+    state.pendingTierKey = key;
+    const value = tierValue(role, key);
+    $("#tierValueTitle").textContent = tierLabel(role, key);
+    $("#tierMin").value = value ? value.min : "";
+    $("#tierMax").value = value ? value.max : "";
+    $("#tierValueRemove").style.display = value ? "" : "none";
+    $("#tierValueModal").classList.add("open");
+  }
+
+  function closeTierValueModal() {
+    $("#tierValueModal").classList.remove("open");
+    state.pendingTierRole = null;
+    state.pendingTierKey = null;
+  }
+
+  function confirmTierValue() {
+    const min = Math.max(0, Math.round(Number($("#tierMin").value)));
+    const max = Math.max(0, Math.round(Number($("#tierMax").value)));
+    if ($("#tierMin").value === "" || $("#tierMax").value === "") {
+      toast("Inserisci entrambi i valori");
+      return;
+    }
+    if (min > max) {
+      toast("Il valore Da non può superare A");
+      return;
+    }
+    const role = state.pendingTierRole;
+    const key = state.pendingTierKey;
+    if (!role || key == null) return;
+    if (!state.tierValues[role]) state.tierValues[role] = {};
+    state.tierValues[role][key] = { min, max };
+    save();
+    renderList();
+    closeTierValueModal();
+  }
+
   function resetAuction() {
     if (!confirm("Azzerare tutta l'asta? Segni, rosa e crediti verranno cancellati.")) return;
     state.flags = {};
     state.roster = [];
     save();
     updateCreditsChip();
+    updateRoleTabs();
     renderList();
     if ($("#rosterOverlay").classList.contains("open")) renderRoster();
     toast("Asta azzerata");
@@ -2399,6 +2826,11 @@ const PLAYERS = {
   });
 
   listEl.addEventListener("click", (e) => {
+    const tier = e.target.closest(".tier-head");
+    if (tier) {
+      openTierValueModal(tier.dataset.tierRole, tier.dataset.tierKey);
+      return;
+    }
     const row = e.target.closest(".player");
     if (!row) return;
     applyTool(row.dataset.id);
@@ -2416,6 +2848,7 @@ const PLAYERS = {
 
   $("#creditsChip").addEventListener("click", openRoster);
   $("#closeRoster").addEventListener("click", closeRoster);
+  $("#rosterPlanBtn").addEventListener("click", openPlans);
   $("#rosterOverlay").addEventListener("click", (e) => {
     if (e.target === $("#rosterOverlay")) closeRoster();
   });
@@ -2434,6 +2867,7 @@ const PLAYERS = {
       removeFromRoster(state.editingRosterId);
       save();
       updateCreditsChip();
+      updateRoleTabs();
       renderList();
       renderRoster();
       closeCreditsModal();
@@ -2441,6 +2875,89 @@ const PLAYERS = {
   });
   $("#creditsModal").addEventListener("click", (e) => {
     if (e.target === $("#creditsModal")) closeCreditsModal();
+  });
+
+  $("#plansBtn").addEventListener("click", openPlans);
+  $("#activePlanBtn").addEventListener("click", openPlans);
+  $("#closePlans").addEventListener("click", closePlans);
+  $("#plansOverlay").addEventListener("click", (e) => {
+    if (e.target === $("#plansOverlay")) closePlans();
+  });
+  $("#planUnitBtn").addEventListener("click", () => {
+    state.planUnit = state.planUnit === "cr" ? "pct" : "cr";
+    refreshPlanSurfaces();
+  });
+  $("#planChips").addEventListener("click", (e) => {
+    const chip = e.target.closest("[data-plan-id]");
+    if (chip) {
+      state.activePlanId = chip.dataset.planId;
+      renderPlans();
+      refreshPlanSurfaces();
+      return;
+    }
+    if (e.target.closest("#newPlanBtn")) {
+      const plan = {
+        id: newPlanId(),
+        name: nextPlanName(),
+        alloc: { P: 0, D: 0, C: 0, A: 0 },
+      };
+      state.plans.push(plan);
+      state.activePlanId = plan.id;
+      state.planEditUnit = "cr";
+      renderPlans();
+      refreshPlanSurfaces();
+    }
+  });
+  $("#planEditor").addEventListener("click", (e) => {
+    const unit = e.target.closest("[data-unit]");
+    if (unit) {
+      state.planEditUnit = unit.dataset.unit;
+      renderPlans();
+      return;
+    }
+    if (e.target.closest("#deletePlanBtn")) {
+      const plan = activePlan();
+      if (!plan || !confirm(`Eliminare "${plan.name}"?`)) return;
+      const idx = state.plans.findIndex((item) => item.id === plan.id);
+      state.plans.splice(idx, 1);
+      state.activePlanId = state.plans[idx]?.id || state.plans[idx - 1]?.id || null;
+      renderPlans();
+      refreshPlanSurfaces();
+    }
+  });
+  $("#planEditor").addEventListener("change", (e) => {
+    const plan = activePlan();
+    if (!plan) return;
+    if (e.target.id === "planNameInput") {
+      plan.name = e.target.value.trim() || "Piano senza nome";
+    } else if (e.target.matches("[data-plan-role]")) {
+      if (state.planEditUnit === "pct") {
+        setPlanPercentages();
+      } else {
+        plan.alloc[e.target.dataset.planRole] = Math.max(0, Math.round(Number(e.target.value) || 0));
+      }
+    } else {
+      return;
+    }
+    renderPlans();
+    refreshPlanSurfaces();
+  });
+
+  $("#tierValueCancel").addEventListener("click", closeTierValueModal);
+  $("#tierValueConfirm").addEventListener("click", confirmTierValue);
+  $("#tierValueRemove").addEventListener("click", () => {
+    const role = state.pendingTierRole;
+    const key = state.pendingTierKey;
+    if (role && key != null && state.tierValues[role]) {
+      delete state.tierValues[role][key];
+      if (!Object.keys(state.tierValues[role]).length) delete state.tierValues[role];
+      save();
+      renderList();
+    }
+    closeTierValueModal();
+  });
+  $("#tierValueModal").addEventListener("click", (e) => {
+    if (e.target === $("#tierValueModal")) closeTierValueModal();
   });
 
   $("#resetBtn").addEventListener("click", resetAuction);
@@ -2475,6 +2992,7 @@ const PLAYERS = {
   load();
   buildKeypad();
   $("#dataStampLabel").textContent = PLAYERS.dataStamp || "";
+  updatePlanUi();
   updateRoleTabs();
   updateToolbar();
   updateCreditsChip();

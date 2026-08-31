@@ -23,6 +23,13 @@ nemmeno nel codice sorgente.
 Composizione della rosa: 3 portieri, 9 difensori, 9 centrocampisti, 6 attaccanti. Tutto lo stato resta salvato
 nel browser, quindi puoi chiudere e riaprire senza perdere l'asta.
 
+## Piani di spesa e valori
+
+Da **Piani** puoi creare più ripartizioni dei 300 crediti, scegliere quella attiva e compilarla in crediti o percentuale.
+Durante l'asta i tab mostrano quanto resta per ruolo; nella rosa trovi piano, speso e margine con una barra di avanzamento.
+Tocca la testata di una fascia per salvarne il valore minimo e massimo: il range compare anche quando assegni un giocatore.
+Il reset dell'asta cancella segni e rosa, ma conserva piani e valutazioni.
+
 ## Fasce
 
 - **Portieri:** il migliore di ogni squadra, tutte e 20 rappresentate, senza fasce.

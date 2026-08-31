@@ -118,6 +118,20 @@
     .plans-chip .plan-label { font-size: 11px; font-weight: 700; color: var(--accent); }
     .plans-chip .plan-label:empty { display: none; }
 
+    .mode-chip {
+      flex: 0 0 auto;
+      min-width: 52px;
+      height: 44px;
+      border-radius: 22px;
+      border: 2px solid var(--accent);
+      background: rgba(91,159,212,.16);
+      color: var(--text);
+      font-weight: 800;
+      font-size: 16px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
     .search-wrap { flex: 1; position: relative; }
     .search-wrap input {
       width: 100%;
@@ -291,6 +305,7 @@
       .tool { font-size: 10px; }
       .credits-chip { min-width: 82px; padding: 0 10px; }
       .plans-chip { min-width: 62px; padding: 0 10px; font-size: 13px; }
+      .mode-chip { min-width: 46px; padding: 0 8px; font-size: 14px; }
     }
     /* iPad in verticale e oltre: card più larghe e nomi più grandi */
     @media (min-width: 700px) {
@@ -695,9 +710,51 @@
     }
     .noscript-warn h1 { font-size: 20px; margin: 0 0 10px; }
     .noscript-warn code { background: var(--bg3); padding: 2px 6px; border-radius: 5px; }
+
+    .mode-gate {
+      position: fixed; inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background: var(--bg);
+    }
+    .mode-gate.open { display: flex; }
+    .mode-gate-inner { width: 100%; max-width: 520px; }
+    .mode-gate-inner h1 { margin: 0 0 8px; font-size: 28px; }
+    .mode-gate-inner p { margin: 0 0 22px; color: var(--muted); font-size: 16px; line-height: 1.4; }
+    .mode-cards { display: grid; gap: 12px; }
+    .mode-card {
+      text-align: left;
+      width: 100%;
+      border-radius: 18px;
+      border: 2px solid var(--border);
+      background: var(--bg2);
+      color: var(--text);
+      padding: 18px 16px;
+      cursor: pointer;
+    }
+    .mode-card:active { transform: scale(.98); }
+    .mode-card.active { border-color: var(--accent); background: rgba(91,159,212,.12); }
+    .mode-card strong { display: block; font-size: 22px; margin-bottom: 6px; }
+    .mode-card span { display: block; color: var(--muted); font-size: 14px; line-height: 1.35; font-weight: 500; }
+    .mode-cancel {
+      margin-top: 16px;
+      width: 100%;
+      height: 48px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    body.need-mode #app { visibility: hidden; }
   </style>
 </head>
-<body>
+<body class="need-mode">
   <noscript>
     <div class="noscript-warn">
       <h1>Apri questo file con un browser</h1>
@@ -709,9 +766,10 @@
   <div id="app">
     <header>
       <div class="top-row">
+        <button type="button" class="mode-chip" id="modeBtn" title="Cambia versione">300</button>
         <button type="button" class="credits-chip" id="creditsChip" title="Apri rosa">
           <span id="creditsLeft">300</span>
-          <span class="label">/300</span>
+          <span class="label" id="creditsBudgetLabel">/300</span>
         </button>
         <button type="button" class="plans-chip" id="plansBtn" title="Piani di spesa">
           <span>Piani</span>
@@ -816,6 +874,24 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <div class="mode-gate open" id="modeGate">
+    <div class="mode-gate-inner">
+      <h1>Che asta fai?</h1>
+      <p>Sono due applicazioni separate: preferiti, rosa, piani e valutazioni non si mescolano.</p>
+      <div class="mode-cards">
+        <button type="button" class="mode-card" data-mode="300">
+          <strong>Fantacalcio 300</strong>
+          <span>300 crediti · 2 portieri, 9 difensori, 9 centrocampisti, 6 attaccanti · 9 fasce in difesa e centrocampo</span>
+        </button>
+        <button type="button" class="mode-card" data-mode="500">
+          <strong>Fantacalcio 500</strong>
+          <span>500 crediti · 3 portieri, 8 difensori, 8 centrocampisti, 6 attaccanti · 8 fasce, gli altri giocatori restano in bonus</span>
+        </button>
+      </div>
+      <button type="button" class="mode-cancel" id="modeCancel" style="display:none">Annulla</button>
+    </div>
+  </div>
 
   <script>
 /* === PLAYERS_DATA_START === */
@@ -2103,12 +2179,40 @@ const PLAYERS = {
 /* === PLAYERS_DATA_END === */
 
 (() => {
-  const BUDGET = 300;
-  const SLOTS = { P: 3, D: 9, C: 9, A: 6 };
   const ROLE_LABELS = { P: "Portieri", D: "Difensori", C: "Centrocampisti", A: "Attaccanti" };
   const ROLE_SHORT = { P: "Porta", D: "Difesa", C: "Centrocampo", A: "Attacco" };
   const ROLES = ["P", "D", "C", "A"];
-  const STORAGE_KEY = "fantaAstaState_v1";
+  const MODE_KEY = "fantaAstaMode";
+  const LEGACY_STORAGE_KEY = "fantaAstaState_v1";
+  const MODE_CONFIG = {
+    300: {
+      budget: 300,
+      slots: { P: 2, D: 9, C: 9, A: 6 },
+      fasciaCount: { D: 9, C: 9, A: 6 },
+    },
+    500: {
+      budget: 500,
+      slots: { P: 3, D: 8, C: 8, A: 6 },
+      fasciaCount: { D: 8, C: 8, A: 6 },
+    },
+  };
+  let currentMode = null;
+
+  function cfg() {
+    return MODE_CONFIG[currentMode] || MODE_CONFIG[300];
+  }
+  function budget() {
+    return cfg().budget;
+  }
+  function slotCap(role) {
+    return cfg().slots[role];
+  }
+  function slotTotal() {
+    return ROLES.reduce((sum, role) => sum + slotCap(role), 0);
+  }
+  function storageKey() {
+    return `fantaAstaState_${currentMode}`;
+  }
 
   const state = {
     role: "P",
@@ -2182,7 +2286,19 @@ const PLAYERS = {
   }
 
   function remaining() {
-    return BUDGET - spent();
+    return budget() - spent();
+  }
+
+  function roleBlock(role) {
+    const src = PLAYERS[role] || { tiers: [], bonus: [] };
+    const keep = cfg().fasciaCount[role];
+    if (keep == null) return src;
+    const allTiers = src.tiers || [];
+    const extra = allTiers.slice(keep).flat();
+    return {
+      tiers: allTiers.slice(0, keep),
+      bonus: extra.concat(src.bonus || []),
+    };
   }
 
   function toast(msg) {
@@ -2193,6 +2309,7 @@ const PLAYERS = {
   }
 
   function save() {
+    if (!currentMode) return;
     const payload = {
       dataStamp: PLAYERS.dataStamp || "",
       role: state.role,
@@ -2206,7 +2323,7 @@ const PLAYERS = {
       tierValues: state.tierValues,
     };
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(storageKey(), JSON.stringify(payload));
     } catch (_) {
       // Avvisa una sola volta: senza salvataggio l'asta si perde chiudendo la pagina
       if (!storageWarned) {
@@ -2247,7 +2364,7 @@ const PLAYERS = {
     // Cap roster by role
     const byRole = { P: [], D: [], C: [], A: [] };
     for (const s of roster) {
-      if ((byRole[s.role] || []).length < SLOTS[s.role]) byRole[s.role].push(s);
+      if ((byRole[s.role] || []).length < slotCap(s.role)) byRole[s.role].push(s);
     }
     return {
       flags,
@@ -2257,7 +2374,7 @@ const PLAYERS = {
 
   function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey());
       if (!raw) return;
       const saved = JSON.parse(raw);
       const { flags, roster } = reconcile(saved);
@@ -2287,6 +2404,7 @@ const PLAYERS = {
     const left = remaining();
     const chip = $("#creditsChip");
     $("#creditsLeft").textContent = String(left);
+    $("#creditsBudgetLabel").textContent = `/${budget()}`;
     chip.classList.toggle("over", left < 0);
   }
 
@@ -2363,7 +2481,7 @@ const PLAYERS = {
         </section>`;
       }
     } else {
-      const block = PLAYERS[role] || { tiers: [], bonus: [] };
+      const block = roleBlock(role);
       let any = false;
       (block.tiers || []).forEach((tier, idx) => {
         const visible = tier.filter((p) => {
@@ -2421,7 +2539,7 @@ const PLAYERS = {
 
   function tierKeyForPlayer(p) {
     if (p.r === "P") return "titolari";
-    const block = PLAYERS[p.r] || { tiers: [], bonus: [] };
+    const block = roleBlock(p.r);
     const id = String(p.id);
     const idx = (block.tiers || []).findIndex((tier) => tier.some((item) => String(item.id) === id));
     if (idx >= 0) return String(idx);
@@ -2489,8 +2607,8 @@ const PLAYERS = {
         openCreditsModal(p, true);
         return;
       }
-      if (roleCount(p.r) >= SLOTS[p.r]) {
-        toast(`${ROLE_LABELS[p.r]}: rosa piena (${SLOTS[p.r]})`);
+      if (roleCount(p.r) >= slotCap(p.r)) {
+        toast(`${ROLE_LABELS[p.r]}: rosa piena (${slotCap(p.r)})`);
         return;
       }
       openCreditsModal(p, false);
@@ -2528,8 +2646,8 @@ const PLAYERS = {
     if (existing) {
       existing.credits = credits;
     } else {
-      if (roleCount(p.r) >= SLOTS[p.r]) {
-        toast(`${ROLE_LABELS[p.r]}: rosa piena (${SLOTS[p.r]})`);
+      if (roleCount(p.r) >= slotCap(p.r)) {
+        toast(`${ROLE_LABELS[p.r]}: rosa piena (${slotCap(p.r)})`);
         return false;
       }
       state.roster.push({ id: p.id, role: p.r, credits });
@@ -2601,7 +2719,7 @@ const PLAYERS = {
       renderList();
       const roleRem = planRemaining(p.r);
       if (roleRem != null && roleRem < 0) toast(`${ROLE_SHORT[p.r]}: ${Math.abs(roleRem)} oltre il piano`);
-      else if (remaining() < 0) toast("Attenzione: budget oltre i 300");
+      else if (remaining() < 0) toast(`Attenzione: budget oltre i ${budget()}`);
       closeCreditsModal();
       if ($("#rosterOverlay").classList.contains("open")) renderRoster();
     }
@@ -2613,7 +2731,7 @@ const PLAYERS = {
     $("#rosterSummary").innerHTML = `
       <div class="stat"><div class="v">${spent()}</div><div class="k">Spesi</div></div>
       <div class="stat ${rem < 0 ? "over" : ""}"><div class="v">${rem}</div><div class="k">Rimasti</div></div>
-      <div class="stat"><div class="v">${state.roster.length}/27</div><div class="k">Giocatori</div></div>
+      <div class="stat"><div class="v">${state.roster.length}/${slotTotal()}</div><div class="k">Giocatori</div></div>
     `;
 
     let html = "";
@@ -2623,7 +2741,7 @@ const PLAYERS = {
     rosterPlanBtn.textContent = plan ? `Piano: ${plan.name}` : "";
     for (const role of ROLES) {
       const slots = state.roster.filter((x) => x.role === role);
-      html += `<div class="roster-role"><h3>${ROLE_LABELS[role]} (${slots.length}/${SLOTS[role]})</h3>`;
+      html += `<div class="roster-role"><h3>${ROLE_LABELS[role]} (${slots.length}/${slotCap(role)})</h3>`;
       if (plan) {
         const alloc = Number(plan.alloc[role]) || 0;
         const roleSpent = spentByRole(role);
@@ -2635,7 +2753,7 @@ const PLAYERS = {
         </div>
         <div class="plan-progress ${remRole < 0 ? "over" : ""}"><span style="width:${progress}%"></span></div>`;
       }
-      for (let i = 0; i < SLOTS[role]; i++) {
+      for (let i = 0; i < slotCap(role); i++) {
         const s = slots[i];
         if (s) {
           const p = map.get(String(s.id));
@@ -2692,7 +2810,7 @@ const PLAYERS = {
     ).join("") + `<button type="button" class="plan-chip" id="newPlanBtn">+ Nuovo</button>`;
 
     if (!plan) {
-      $("#planEditor").innerHTML = `<div class="plan-empty">Crea o seleziona un piano per ripartire i ${BUDGET} crediti.</div>`;
+      $("#planEditor").innerHTML = `<div class="plan-empty">Crea o seleziona un piano per ripartire i ${budget()} crediti.</div>`;
       return;
     }
 
@@ -2705,16 +2823,16 @@ const PLAYERS = {
       </div>
       ${ROLES.map((role) => {
         const alloc = Number(plan.alloc[role]) || 0;
-        const inputValue = state.planEditUnit === "cr" ? alloc : formatPct(alloc / BUDGET * 100);
-        const secondary = state.planEditUnit === "cr" ? `${formatPct(alloc / BUDGET * 100)}%` : `${alloc} cr`;
+        const inputValue = state.planEditUnit === "cr" ? alloc : formatPct(alloc / budget() * 100);
+        const secondary = state.planEditUnit === "cr" ? `${formatPct(alloc / budget() * 100)}%` : `${alloc} cr`;
         return `<div class="plan-row">
           <span class="plan-role">${ROLE_LABELS[role]}</span>
           <input type="number" min="0" step="${state.planEditUnit === "cr" ? "1" : "0.1"}" inputmode="decimal" data-plan-role="${role}" value="${inputValue}" />
           <span class="plan-secondary">${secondary}</span>
         </div>`;
       }).join("")}
-      <div class="plan-total ${total === BUDGET ? "ok" : "bad"}">
-        <span>Totale</span><span>${total} / ${BUDGET}${total === BUDGET ? "" : " · verifica"}</span>
+      <div class="plan-total ${total === budget() ? "ok" : "bad"}">
+        <span>Totale</span><span>${total} / ${budget()}${total === budget() ? "" : " · verifica"}</span>
       </div>
       <button type="button" class="btn danger" id="deletePlanBtn">Elimina piano</button>
     </div>`;
@@ -2745,11 +2863,11 @@ const PLAYERS = {
       values[input.dataset.planRole] = Math.max(0, Number(input.value) || 0);
     });
     const totalPct = ROLES.reduce((sum, role) => sum + values[role], 0);
-    const raw = Object.fromEntries(ROLES.map((role) => [role, values[role] / 100 * BUDGET]));
+    const raw = Object.fromEntries(ROLES.map((role) => [role, values[role] / 100 * budget()]));
     const alloc = Object.fromEntries(ROLES.map((role) => [role, Math.floor(raw[role])]));
     if (Math.abs(totalPct - 100) < 0.001) {
       const largest = ROLES.reduce((best, role) => values[role] > values[best] ? role : best, "P");
-      alloc[largest] += BUDGET - ROLES.reduce((sum, role) => sum + alloc[role], 0);
+      alloc[largest] += budget() - ROLES.reduce((sum, role) => sum + alloc[role], 0);
     } else {
       ROLES.forEach((role) => { alloc[role] = Math.round(raw[role]); });
     }
@@ -2804,6 +2922,92 @@ const PLAYERS = {
     renderList();
     if ($("#rosterOverlay").classList.contains("open")) renderRoster();
     toast("Asta azzerata");
+  }
+
+  function migrateLegacy300() {
+    try {
+      if (localStorage.getItem("fantaAstaState_300")) return;
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacy) localStorage.setItem("fantaAstaState_300", legacy);
+    } catch (_) { /* ignore */ }
+  }
+
+  function clearRuntime() {
+    state.role = "P";
+    state.tool = "taken";
+    state.query = "";
+    state.showHidden = false;
+    state.flags = {};
+    state.roster = [];
+    state.plans = [];
+    state.activePlanId = null;
+    state.planUnit = "cr";
+    state.tierValues = {};
+    state.planEditUnit = "cr";
+    state.pendingMineId = null;
+    state.editingRosterId = null;
+    state.creditInput = "";
+    state.pendingTierRole = null;
+    state.pendingTierKey = null;
+    const search = $("#search");
+    if (search) search.value = "";
+  }
+
+  function syncModeUi() {
+    document.querySelectorAll(".mode-card").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.mode === String(currentMode));
+    });
+    $("#modeBtn").textContent = currentMode || "—";
+    document.title = currentMode ? `Asta Fantacalcio ${currentMode}` : "Asta Fantacalcio";
+  }
+
+  function hideModeGate() {
+    document.body.classList.remove("need-mode");
+    $("#modeGate").classList.remove("open");
+  }
+
+  function showModeGate(canCancel) {
+    syncModeUi();
+    $("#modeCancel").style.display = canCancel && currentMode ? "" : "none";
+    $("#modeGate").classList.add("open");
+    if (!currentMode) document.body.classList.add("need-mode");
+  }
+
+  function closeOpenSheets() {
+    $("#rosterOverlay").classList.remove("open");
+    $("#plansOverlay").classList.remove("open");
+    $("#creditsModal").classList.remove("open");
+    $("#tierValueModal").classList.remove("open");
+  }
+
+  function enterMode(id) {
+    if (id !== "300" && id !== "500") return;
+    if (currentMode === id) {
+      hideModeGate();
+      return;
+    }
+    currentMode = id;
+    try { localStorage.setItem(MODE_KEY, id); } catch (_) {}
+    if (id === "300") migrateLegacy300();
+    clearRuntime();
+    load();
+    closeOpenSheets();
+    hideModeGate();
+    syncModeUi();
+    updatePlanUi();
+    updateRoleTabs();
+    updateToolbar();
+    updateCreditsChip();
+    renderList();
+  }
+
+  function savedMode() {
+    try {
+      const raw = localStorage.getItem(MODE_KEY);
+      return raw === "300" || raw === "500" ? raw : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   // Events
@@ -2961,6 +3165,12 @@ const PLAYERS = {
   });
 
   $("#resetBtn").addEventListener("click", resetAuction);
+  $("#modeBtn").addEventListener("click", () => showModeGate(true));
+  $("#modeCancel").addEventListener("click", hideModeGate);
+  $("#modeGate").addEventListener("click", (e) => {
+    const card = e.target.closest(".mode-card");
+    if (card) enterMode(card.dataset.mode);
+  });
 
   // Schermo intero: disponibile su iPad e desktop, non su iPhone
   const fsTarget = document.documentElement;
@@ -2989,14 +3199,11 @@ const PLAYERS = {
   }
 
   // Init
-  load();
   buildKeypad();
   $("#dataStampLabel").textContent = PLAYERS.dataStamp || "";
-  updatePlanUi();
-  updateRoleTabs();
-  updateToolbar();
-  updateCreditsChip();
-  renderList();
+  const initialMode = savedMode();
+  if (initialMode) enterMode(initialMode);
+  else showModeGate(false);
 })();
   </script>
 </body>

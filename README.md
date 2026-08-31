@@ -9,8 +9,8 @@ nemmeno nel codice sorgente.
 
 ## Come si usa
 
-- All'inizio (e dal bottone **300** / **500** in alto): scegli la versione.
-- In alto: tab dei ruoli, ricerca per nome o squadra, crediti rimasti (tocca per aprire la rosa).
+- All'inizio (e dal bottone **F300** / **F500** a destra): scegli la versione.
+- In alto: **Rosa** apre la squadra, ricerca per nome o squadra, crediti rimasti a destra della ricerca.
 - In basso: lo strumento attivo. Lo scegli una volta e resta attivo fino al cambio.
 
 | Strumento | Effetto sul giocatore |

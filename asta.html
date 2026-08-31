@@ -78,7 +78,7 @@
 
     .credits-chip {
       flex: 0 0 auto;
-      min-width: 92px;
+      min-width: 72px;
       height: 44px;
       border-radius: 22px;
       border: 2px solid var(--accent);
@@ -86,15 +86,34 @@
       color: var(--text);
       font-weight: 700;
       font-size: 16px;
-      padding: 0 14px;
+      padding: 0 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
       cursor: pointer;
     }
-    .credits-chip.over { border-color: var(--danger); color: var(--danger); }
-    .credits-chip .label { font-size: 11px; font-weight: 600; color: var(--muted); }
+    .credits-chip:active { background: #2c3a4d; }
+
+    .credits-readout {
+      flex: 0 0 auto;
+      min-width: 72px;
+      height: 44px;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 16px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      pointer-events: none;
+    }
+    .credits-readout.over { border-color: var(--danger); color: var(--danger); }
+    .credits-readout .label { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .credits-readout.over .label { color: var(--danger); }
 
     .plans-chip {
       flex: 0 0 auto;
@@ -120,14 +139,14 @@
 
     .mode-chip {
       flex: 0 0 auto;
-      min-width: 52px;
+      min-width: 62px;
       height: 44px;
       border-radius: 22px;
       border: 2px solid var(--accent);
       background: rgba(91,159,212,.16);
       color: var(--text);
       font-weight: 800;
-      font-size: 16px;
+      font-size: 15px;
       padding: 0 12px;
       cursor: pointer;
     }
@@ -303,9 +322,10 @@
       :root { --card-min: 128px; }
       .player-name { font-size: 16px; }
       .tool { font-size: 10px; }
-      .credits-chip { min-width: 82px; padding: 0 10px; }
+      .credits-chip { min-width: 62px; padding: 0 10px; font-size: 14px; }
+      .credits-readout { min-width: 64px; padding: 0 8px; font-size: 14px; }
       .plans-chip { min-width: 62px; padding: 0 10px; font-size: 13px; }
-      .mode-chip { min-width: 46px; padding: 0 8px; font-size: 14px; }
+      .mode-chip { min-width: 54px; padding: 0 8px; font-size: 13px; }
     }
     /* iPad in verticale e oltre: card più larghe e nomi più grandi */
     @media (min-width: 700px) {
@@ -766,11 +786,7 @@
   <div id="app">
     <header>
       <div class="top-row">
-        <button type="button" class="mode-chip" id="modeBtn" title="Cambia versione">300</button>
-        <button type="button" class="credits-chip" id="creditsChip" title="Apri rosa">
-          <span id="creditsLeft">300</span>
-          <span class="label" id="creditsBudgetLabel">/300</span>
-        </button>
+        <button type="button" class="credits-chip" id="creditsChip" title="Apri rosa">Rosa</button>
         <button type="button" class="plans-chip" id="plansBtn" title="Piani di spesa">
           <span>Piani</span>
           <span class="plan-label" id="plansBtnPlan"></span>
@@ -779,6 +795,10 @@
           <input id="search" type="search" placeholder="Cerca nome o squadra…" autocomplete="off" enterkeyhint="search" />
           <button type="button" class="search-clear" id="searchClear" aria-label="Pulisci">×</button>
         </div>
+        <div class="credits-readout" id="creditsReadout" aria-live="polite">
+          <span id="creditsLeft">300</span><span class="label" id="creditsBudgetLabel">/300</span>
+        </div>
+        <button type="button" class="mode-chip" id="modeBtn" title="Cambia versione">F300</button>
       </div>
       <div class="role-tabs" id="roleTabs">
         <button type="button" class="role-tab active" data-role="P"><span>Portieri</span><span class="role-residual empty"></span></button>
@@ -2402,10 +2422,10 @@ const PLAYERS = {
 
   function updateCreditsChip() {
     const left = remaining();
-    const chip = $("#creditsChip");
+    const readout = $("#creditsReadout");
     $("#creditsLeft").textContent = String(left);
     $("#creditsBudgetLabel").textContent = `/${budget()}`;
-    chip.classList.toggle("over", left < 0);
+    readout.classList.toggle("over", left < 0);
   }
 
   function updateToolbar() {
@@ -2957,7 +2977,7 @@ const PLAYERS = {
     document.querySelectorAll(".mode-card").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.mode === String(currentMode));
     });
-    $("#modeBtn").textContent = currentMode || "—";
+    $("#modeBtn").textContent = currentMode ? `F${currentMode}` : "—";
     document.title = currentMode ? `Asta Fantacalcio ${currentMode}` : "Asta Fantacalcio";
   }
 

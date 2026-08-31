@@ -375,7 +375,12 @@
     .roster-summary {
       display: flex;
       gap: 10px;
-      margin-bottom: 14px;
+      flex-shrink: 0;
+      padding: 12px 16px 14px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 16px -8px rgba(0,0,0,.45);
+      z-index: 1;
     }
     .stat {
       flex: 1;
@@ -615,6 +620,7 @@
           <button type="button" class="btn ghost" id="closeRoster">Chiudi</button>
         </div>
       </div>
+      <div class="roster-summary" id="rosterSummary"></div>
       <div class="sheet-body" id="rosterBody"></div>
     </div>
   </div>
@@ -2318,12 +2324,13 @@ const PLAYERS = {
   function renderRoster() {
     const map = playerMap();
     const rem = remaining();
-    let html = `<div class="roster-summary">
+    $("#rosterSummary").innerHTML = `
       <div class="stat"><div class="v">${spent()}</div><div class="k">Spesi</div></div>
       <div class="stat ${rem < 0 ? "over" : ""}"><div class="v">${rem}</div><div class="k">Rimasti</div></div>
       <div class="stat"><div class="v">${state.roster.length}/27</div><div class="k">Giocatori</div></div>
-    </div>`;
+    `;
 
+    let html = "";
     for (const role of ["P", "D", "C", "A"]) {
       const slots = state.roster.filter((x) => x.role === role);
       html += `<div class="roster-role"><h3>${ROLE_LABELS[role]} (${slots.length}/${SLOTS[role]})</h3>`;

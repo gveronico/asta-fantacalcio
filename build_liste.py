@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import sys
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -33,6 +34,13 @@ ROLE_CONFIG = {
     "D": {"tiers": (9, 8, 20), "label": "Difensori"},  # n_tiers, size, bonus
     "C": {"tiers": (9, 8, 20), "label": "Centrocampisti"},
     "A": {"tiers": (6, 8, 20), "label": "Attaccanti"},
+}
+
+# Sempre in fascia bonus, anche sotto la soglia FVM. Se sono già in una fascia
+# numerata (es. Calò in C), li sposta in bonus senza rimescolare le altre fasce.
+BONUS_EXTRA = {
+    "D": ["Doig", "Kossounou", "Ghilardi", "Kamara H."],
+    "C": ["Calò", "Akinsanmiro", "Piotrowski", "Unai Gomez"],
 }
 
 
@@ -102,6 +110,56 @@ def sort_by_fvm(players: list[dict]) -> list[dict]:
     return sorted(players, key=lambda p: (-p["_fvm"], p["nome"].lower()))
 
 
+def norm_name(s: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", s)
+    stripped = "".join(c for c in decomposed if not unicodedata.combining(c))
+    return " ".join(stripped.lower().split())
+
+
+def find_by_name(ordered: list[dict], wanted: str) -> dict | None:
+    target = norm_name(wanted)
+    exact = [p for p in ordered if norm_name(p["nome"]) == target]
+    if len(exact) == 1:
+        return exact[0]
+    if len(exact) > 1:
+        print(f"  nome ambiguo (match esatto): {wanted} -> {[p['nome'] for p in exact]}")
+        return None
+    partial = [
+        p
+        for p in ordered
+        if target in norm_name(p["nome"]) or norm_name(p["nome"]).startswith(target)
+    ]
+    if len(partial) == 1:
+        return partial[0]
+    if partial:
+        print(f"  nome ambiguo: {wanted} -> {[p['nome'] for p in partial]}")
+    else:
+        print(f"  non trovato in Excel: {wanted}")
+    return None
+
+
+def apply_bonus_extra(tiers: list[list[dict]], bonus: list[dict], ordered: list[dict], names: list[str]) -> None:
+    for wanted in names:
+        src = find_by_name(ordered, wanted)
+        if src is None:
+            continue
+        pub = public_player(src)
+        if any(p["id"] == pub["id"] for p in bonus):
+            continue
+        removed = False
+        for tier in tiers:
+            for i, p in enumerate(tier):
+                if p["id"] == pub["id"]:
+                    tier.pop(i)
+                    removed = True
+                    break
+            if removed:
+                break
+        bonus.append(pub)
+        where = "spostato da fascia" if removed else "aggiunto sotto soglia"
+        print(f"  bonus extra {src['r']}: {pub['nome']} ({pub['squadra']}) — {where}")
+
+
 def public_player(p: dict) -> dict:
     fvm = p["_fvm"]
     return {
@@ -131,6 +189,7 @@ def build_tiered(players: list[dict], role: str, n_tiers: int, tier_size: int, b
         chunk = sliced[i * tier_size : (i + 1) * tier_size]
         tiers.append([public_player(p) for p in chunk])
     bonus_list = [public_player(p) for p in sliced[n_tiers * tier_size : need]]
+    apply_bonus_extra(tiers, bonus_list, ordered, BONUS_EXTRA.get(role, []))
     return {"tiers": tiers, "bonus": bonus_list}
 
 

@@ -30,9 +30,9 @@ MARKER_END = "/* === PLAYERS_DATA_END === */"
 
 ROLE_CONFIG = {
     "P": {"tiers": None, "label": "Portieri"},
-    "D": {"tiers": (9, 8, 10), "label": "Difensori"},  # n_tiers, size, bonus
-    "C": {"tiers": (9, 8, 10), "label": "Centrocampisti"},
-    "A": {"tiers": (6, 8, 10), "label": "Attaccanti"},
+    "D": {"tiers": (9, 8, 20), "label": "Difensori"},  # n_tiers, size, bonus
+    "C": {"tiers": (9, 8, 20), "label": "Centrocampisti"},
+    "A": {"tiers": (6, 8, 20), "label": "Attaccanti"},
 }
 
 

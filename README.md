@@ -40,9 +40,9 @@ Il reset dell'asta cancella segni e rosa, ma conserva piani e valutazioni di que
 ## Fasce
 
 - **Portieri:** il migliore di ogni squadra, tutte e 20 rappresentate, senza fasce.
-- **Difensori e centrocampisti (300):** 9 fasce da 8 + una fascia bonus da 10.
+- **Difensori e centrocampisti (300):** 9 fasce da 8 + una fascia bonus da 20.
 - **Difensori e centrocampisti (500):** 8 fasce da 8; i giocatori della nona fascia restano in bonus insieme agli altri.
-- **Attaccanti:** 6 fasce da 8 + una fascia bonus da 10.
+- **Attaccanti:** 6 fasce da 8 + una fascia bonus da 20.
 
 Le fasce sono da 8 perché la lega ha 8 squadre: la prima fascia contiene i giocatori che, in teoria, si spartiscono
 le 8 squadre, e così via.

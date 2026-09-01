@@ -6,7 +6,8 @@ Uso:
   python build_liste.py percorso.xlsx
 
 Se non passi un path, usa l'.xlsx più recente nella cartella dello script.
-Non scrive mai FVM né quotazioni nel HTML — solo id, nome, squadra, ruolo.
+L'FVM Excel è su 1000 crediti: lo script lo salva così, l'app lo quota
+su 300 o 500 e lo arrotonda all'intero.
 """
 
 from __future__ import annotations
@@ -101,8 +102,14 @@ def sort_by_fvm(players: list[dict]) -> list[dict]:
     return sorted(players, key=lambda p: (-p["_fvm"], p["nome"].lower()))
 
 
-def strip_fvm(p: dict) -> dict:
-    return {"id": p["id"], "nome": p["nome"], "squadra": p["squadra"]}
+def public_player(p: dict) -> dict:
+    fvm = p["_fvm"]
+    return {
+        "id": p["id"],
+        "nome": p["nome"],
+        "squadra": p["squadra"],
+        "fvm": int(round(fvm)),
+    }
 
 
 def build_keepers(players: list[dict]) -> list[dict]:
@@ -112,7 +119,7 @@ def build_keepers(players: list[dict]) -> list[dict]:
         if p["squadra"] not in best_by_team:
             best_by_team[p["squadra"]] = p
     selected = sort_by_fvm(list(best_by_team.values()))
-    return [strip_fvm(p) for p in selected]
+    return [public_player(p) for p in selected]
 
 
 def build_tiered(players: list[dict], role: str, n_tiers: int, tier_size: int, bonus: int) -> dict:
@@ -122,8 +129,8 @@ def build_tiered(players: list[dict], role: str, n_tiers: int, tier_size: int, b
     tiers = []
     for i in range(n_tiers):
         chunk = sliced[i * tier_size : (i + 1) * tier_size]
-        tiers.append([strip_fvm(p) for p in chunk])
-    bonus_list = [strip_fvm(p) for p in sliced[n_tiers * tier_size : need]]
+        tiers.append([public_player(p) for p in chunk])
+    bonus_list = [public_player(p) for p in sliced[n_tiers * tier_size : need]]
     return {"tiers": tiers, "bonus": bonus_list}
 
 
@@ -142,7 +149,7 @@ def build_payload(players: list[dict], xlsx: Path) -> dict:
 
 
 def format_players_block(payload: dict) -> str:
-    # Compact but readable JSON inside the markers — no FVM keys present
+    # Compact but readable JSON inside the markers — fvm is the 1000-credit quote
     json_str = json.dumps(payload, ensure_ascii=False, indent=2)
     return (
         f"{MARKER_START}\n"

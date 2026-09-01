@@ -4,8 +4,8 @@ Strumento da usare durante l'asta: liste di calciatori divise in fasce, segnalin
 All'apertura scegli **Fantacalcio 300** o **Fantacalcio 500**: sono due app separate, con rosa, preferiti e piani
 che non si mescolano. Pensato per iPad in verticale, funziona anche offline.
 
-Il valore di mercato (FVM) del file Excel serve solo a ordinare i giocatori: **non compare mai** nella pagina,
-nemmeno nel codice sorgente.
+Il valore di mercato (FVM) del file Excel è su 1000 crediti: serve a ordinare i giocatori e compare
+sulla card, quotato sui crediti della versione scelta (300 o 500) e arrotondato all'intero.
 
 ## Come si usa
 

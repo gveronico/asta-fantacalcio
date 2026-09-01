@@ -35,7 +35,6 @@ Da **Piani** puoi creare più ripartizioni dei crediti della versione scelta, sc
 compilarla in crediti o percentuale.
 Durante l'asta i tab mostrano quanto resta per ruolo; nella rosa trovi piano, speso e margine con una barra di avanzamento.
 Tocca la testata di una fascia per salvarne il valore minimo e massimo: il range compare anche quando assegni un giocatore.
-Il reset dell'asta cancella segni e rosa, ma conserva piani e valutazioni di quella versione.
 
 ## Fasce
 

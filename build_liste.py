@@ -37,10 +37,10 @@ ROLE_CONFIG = {
 }
 
 # Sempre in fascia bonus, anche sotto la soglia FVM. Se sono già in una fascia
-# numerata (es. Calò in C), li sposta in bonus senza rimescolare le altre fasce.
+# numerata, li sposta in bonus senza rimescolare le altre fasce.
 BONUS_EXTRA = {
     "D": ["Doig", "Kossounou", "Ghilardi", "Kamara H."],
-    "C": ["Calò", "Akinsanmiro", "Piotrowski", "Unai Gomez"],
+    "C": ["Akinsanmiro", "Piotrowski", "Unai Gomez"],
 }
 
 

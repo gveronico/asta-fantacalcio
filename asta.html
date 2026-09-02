@@ -898,7 +898,7 @@
   <script>
 /* === PLAYERS_DATA_START === */
 const PLAYERS = {
-  "dataStamp": "Quotazioni_Fantacalcio_Stagione_2026_27.xlsx | 2026-09-02 05:37 UTC",
+  "dataStamp": "Quotazioni_Fantacalcio_Stagione_2026_27.xlsx | 2026-09-02 05:40 UTC",
   "P": [
     {
       "id": 5841,
@@ -1943,6 +1943,12 @@ const PLAYERS = {
           "fvm": 27
         },
         {
+          "id": 7472,
+          "nome": "Calò",
+          "squadra": "Frosinone",
+          "fvm": 27
+        },
+        {
           "id": 5888,
           "nome": "Casadei",
           "squadra": "Torino",
@@ -2188,12 +2194,6 @@ const PLAYERS = {
         "nome": "Zhegrova",
         "squadra": "Juventus",
         "fvm": 17
-      },
-      {
-        "id": 7472,
-        "nome": "Calò",
-        "squadra": "Frosinone",
-        "fvm": 27
       },
       {
         "id": 6593,
@@ -3624,7 +3624,7 @@ const PLAYERS = {
   // Funzionamento offline quando la pagina è online (ignorato se aperta come file locale)
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js?v=4").catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=5").catch(() => {});
     });
   }
 
